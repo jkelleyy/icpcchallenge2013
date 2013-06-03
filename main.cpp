@@ -9,6 +9,44 @@
 
 using namespace std;
 
+//don't do stupid things like falling into traps...
+//assume that moving in that direction is valid...
+//
+static bool isTrap(Action dir){
+    pair<int,int> loc = currLoc;
+    switch(dir){
+    case DIG_LEFT:
+    case DIG_RIGHT:
+        //these can't really be traps in the sense we care about
+        return false;
+    case LEFT:
+        loc.second--;
+        break;
+    case RIGHT:
+        loc.second++;
+        break;
+    case TOP:
+        loc.first--;
+        break;
+    case BOTTOM:
+        loc.first++;
+        break;
+    case NONE:
+        break;
+    }
+    while(loc.first<15 && !isSolid(map[loc.first+1][loc.second])){
+        loc.first++;
+    }
+    //we are either on the last row or above a solid block, now check sides
+    if(map[loc.first][loc.second]!=REMOVED_BRICK)
+        return false;
+    if(loc.second>0 && !isImpassable(map[loc.first][loc.second-1]))
+        return false;
+    if(loc.second<24 && !isImpassable(map[loc.first][loc.second+1]))
+        return false;
+    return true;
+}
+
 static inline void readMap(){
     for(int c=0;c<16;c++){
         gets(&(map[c][0]));
@@ -162,6 +200,12 @@ static bool doTurn(){
                     break;
                 }
             }
+        }
+        for(int i=NONE;i<7;i++){
+            //the positive score condition makes sure that we can actually
+            //do that action
+            if(score[i]>0 && isTrap(static_cast<Action>(i)))
+                score[i]-=200;//really bad, but not instant death,
         }
     }
 

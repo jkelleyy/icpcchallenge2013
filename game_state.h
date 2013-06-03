@@ -13,6 +13,11 @@ extern pair<int,int> currLoc;
 extern int brickDelay;
 extern pair<int,int> enemyLoc;
 extern int enemyBrickDelay;
-extern pair<int,int> enemyLocs[16*25];
-extern string enemyPrograms[16*25];
-extern int enemyMasters[16*25];
+struct enemyInfo{
+    pair<int,int> loc;
+    string program;
+    int master;
+    bool isTrapped;
+};
+
+extern enemyInfo enemies[16*25];

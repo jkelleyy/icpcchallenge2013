@@ -29,9 +29,7 @@ int brickDelay;
 pair<int,int> enemyLoc;
 int enemyBrickDelay;
 //we can't have more enemies than grid squares!
-pair<int,int> enemyLocs[16*25];
-string enemyPrograms[16*25];
-int enemyMasters[16*25];
+enemyInfo enemies [16*25];
 
 static inline void readMap(){
     for(int c=0;c<16;c++){
@@ -56,9 +54,10 @@ static inline void initGame(){
     scanf(" %d\n",&nenemies);
     for(int i=0;i<nenemies;i++){
         //todo, find a better way of dealing with the program.
-        scanf(" %d %d %s",&enemyLocs[i].first,&enemyLocs[i].second,tempBuffer);
-        enemyPrograms[i] = string(tempBuffer);
-        enemyMasters[i] = -1;
+        scanf(" %d %d %s",&enemies[i].loc.first,&enemies[i].loc.second,tempBuffer);
+        enemies[i].program = string(tempBuffer);
+        enemies[i].master = -1;
+        enemies[i].isTrapped = false;
     }
     currTurn = -1;
 
@@ -139,6 +138,13 @@ bool canDoAction(Action act){
     return false;//should be unreachable
 }
 
+#define NEG_INF -100000000
+
+
+int distSq(const pair<int,int>& a, const pair<int,int>& b){
+    return (b.first-a.first)*(b.first-a.first)+(b.second-a.second)*(b.second-a.second);
+}
+
 //returns false when finished
 bool doTurn(){
     int score[7];//the score for each of the possible commands
@@ -156,10 +162,11 @@ bool doTurn(){
     scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&ignored,&brickDelay);
     scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&ignored,&enemyBrickDelay);
     for(int i=0;i<nenemies;i++){
-        scanf(" %d %d %d",&enemyLocs[i].first,&enemyLocs[i].second,&enemyMasters[i]);
+        scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
 
-        if(enemyLocs[i].first!=-1 && map[enemyLocs[i].first][enemyLocs[i].second]==REMOVED_BRICK){
-            map[enemyLocs[i].first][enemyLocs[i].second]=FILLED_BRICK;
+        if(enemies[i].loc.first!=-1 && map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK){
+            map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
+            enemies[i].isTrapped = true;
         }
     }
     TRACE("POS: %d %d\n",currLoc.first,currLoc.second);
@@ -168,8 +175,84 @@ bool doTurn(){
         if(canDoAction(static_cast<Action>(i)))
             score[i]+=1;
         else
-            score[i]=-1;
+            score[i]=NEG_INF;
     }
+    //don't dig unless there's a reason to
+    score[DIG_LEFT]-=1;
+    score[DIG_RIGHT]-=1;
+    if(isAlive()){
+        for(int i=0;i<nenemies;i++){
+            if(enemies[i].loc.first!=-1 && !enemies[i].isTrapped){
+                switch(distSq(currLoc,enemies[i].loc)){
+                case 1:
+                    //run away
+                    score[NONE] = NEG_INF;
+                    if(currLoc.first==enemies[i].loc.first){
+                        if(currLoc.second>enemies[i].loc.second){
+                            score[RIGHT] += 10;
+                            score[LEFT] = NEG_INF;
+                        }
+                        else{
+                            score[LEFT] += 10;
+                            score[RIGHT] = NEG_INF;
+                        }
+                    }
+                    else{
+                        score[RIGHT] += 5;
+                        score[LEFT] += 5;
+                        if(currLoc.first>enemies[i].loc.first){
+                            score[TOP]=NEG_INF;
+                            score[BOTTOM] +=5;
+                        }
+                        else{
+                            score[BOTTOM]=NEG_INF;
+                            score[TOP] +=5;
+                        }
+                    }
+                    break;
+                case 2:
+                    //also runaway
+                    if(currLoc.second>enemies[i].loc.second){
+                        score[RIGHT] += 10;
+                        score[LEFT] = NEG_INF;
+                    }
+                    else{
+                        score[LEFT] += 10;
+                        score[RIGHT] = NEG_INF;
+                    }
+                    if(currLoc.first>enemies[i].loc.first){
+                        score[TOP] = NEG_INF;
+                        score[BOTTOM] += 10;
+                    }
+                    else{
+                        score[BOTTOM] = NEG_INF;
+                        score[TOP] += 10;
+                    }
+                    break;
+                case 4:
+                    //try and kill
+                    if(currLoc.second>enemies[i].loc.second){
+                        score[DIG_LEFT] += 20;
+                        score[LEFT] = NEG_INF;
+                    }
+                    else if(currLoc.second<enemies[i].loc.second){
+                        score[DIG_RIGHT] += 20;
+                        score[RIGHT] = NEG_INF;
+                    }
+                    else if (currLoc.first>enemies[i].loc.first){
+                        score[TOP] = NEG_INF;
+                        score[BOTTOM] += 10;
+                    }
+                    else{
+                        score[BOTTOM] = NEG_INF;
+                        score[TOP] += 10;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     score[0]=0;
     //end fun stuff!
     vector<Action> bests;

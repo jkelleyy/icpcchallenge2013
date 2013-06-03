@@ -12,7 +12,6 @@ using namespace std;
 static inline void readMap(){
     for(int c=0;c<16;c++){
         gets(&(map[c][0]));
-        TRACE("MAP: %s\n",&map[c][0]);
         if(map[c][0]!=EMPTY &&
            map[c][0]!=LADDER &&
            map[c][0]!=BRICK &&
@@ -71,7 +70,14 @@ static bool doTurn(){
             map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
             enemies[i].isTrapped = true;
         }
+        else{
+            enemies[i].isTrapped = false;
+        }
     }
+    for(int i=0;i<16;i++){
+        TRACE("MAP: %s\n",&map[i][0]);
+    }
+
     TRACE("POS: %d %d\n",currLoc.first,currLoc.second);
     //do fun stuff!
     for(int i=NONE;i<7;i++){
@@ -86,6 +92,7 @@ static bool doTurn(){
     if(isAlive()){
         for(int i=0;i<nenemies;i++){
             if(enemies[i].loc.first!=-1 && !enemies[i].isTrapped){
+                TRACE("DIST: %d\n",distSq(currLoc,enemies[i].loc));
                 switch(distSq(currLoc,enemies[i].loc)){
                 case 1:
                     //run away
@@ -93,10 +100,12 @@ static bool doTurn(){
                     if(currLoc.first==enemies[i].loc.first){
                         if(currLoc.second>enemies[i].loc.second){
                             score[RIGHT] += 10;
+                            score[DIG_LEFT] += 1;
                             score[LEFT] = NEG_INF;
                         }
                         else{
                             score[LEFT] += 10;
+                            score[DIG_RIGHT] += 1;
                             score[RIGHT] = NEG_INF;
                         }
                     }
@@ -164,7 +173,7 @@ static bool doTurn(){
 
         if(score[i]>maxScore){
             maxScore = score[i];
-            bests = vector<Action>();
+            bests.clear();
             bests.push_back(static_cast<Action>(i));
         }
         else if(score[i]==maxScore){
@@ -174,9 +183,15 @@ static bool doTurn(){
     Action a = NONE;
     if(bests.size()!=0){
         a = bests[rand()%bests.size()];
+        TRACE("CANDIDATES:");
+        for(int i=0;i<bests.size();i++){
+            TRACE(" %s",actionNames[bests[i]]);
+        }
+        TRACE("\n");
     }
     act(a);
     TRACE("TRACE: Turn #%d finished with action %s with a score of %d\n",currTurn,actionNames[a],maxScore);
+
     return true;
 }
 

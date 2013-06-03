@@ -3,8 +3,15 @@
 
 using namespace std;
 
+#define EMPTY '.'
+#define LADDER 'H'
+#define BRICK '='
+#define GOLD '*'
+#define REMOVED_BRICK '-'
+#define FILLED_BRICK '+'
+
 //extern the global state
-//the actually declarations for all of these are in main.cpp
+//the actually declarations for all of these are in game_state.cpp
 extern int nrounds;
 extern int nenemies;
 extern int currTurn;
@@ -21,3 +28,37 @@ struct enemyInfo{
 };
 
 extern enemyInfo enemies[16*25];
+
+//bunch of tiny utility functions
+
+static inline bool isSupported(){
+    return currLoc.first==15
+        || map[currLoc.first+1][currLoc.second]==BRICK
+        || map[currLoc.first+1][currLoc.second]==LADDER
+        || map[currLoc.first][currLoc.second]==LADDER
+        || map[currLoc.first+1][currLoc.second]==FILLED_BRICK;
+}
+
+static inline bool isAlive(){
+    return currLoc.first!=-1;
+}
+
+static inline int distSq(const pair<int,int>& a, const pair<int,int>& b){
+    return (b.first-a.first)*(b.first-a.first)+(b.second-a.second)*(b.second-a.second);
+}
+
+enum Action{
+    NONE=0,LEFT,RIGHT,DIG_LEFT,DIG_RIGHT,TOP,BOTTOM
+};
+
+static const char *actionNames[7] = {
+    "NONE",
+    "LEFT",
+    "RIGHT",
+    "DIG_LEFT",
+    "DIG_RIGHT",
+    "TOP",
+    "BOTTOM"
+};
+
+bool canDoAction(Action act);

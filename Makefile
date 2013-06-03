@@ -1,10 +1,11 @@
 
 SRCS=$(wildcard ./*.cpp)
 OBJS=$(SRCS:.cpp=.o)
+CXXFLAGS=-Wall -Wextra -O
 
 
 bistromathics : $(OBJS)
-	g++ -Wall -O0 $^ -lpthread -o $@
+	g++ $(CXXFLAGS) $^ -lpthread -o $@
 
 clean :
 	rm -f *.o bistromathics

@@ -9,28 +9,6 @@
 
 using namespace std;
 
-#define EMPTY '.'
-#define LADDER 'H'
-#define BRICK '='
-#define GOLD '*'
-#define REMOVED_BRICK '-'
-#define FILLED_BRICK '+'
-
-//global game state!, make sure to update these on every restart!
-
-int nrounds;
-int nenemies;
-int currTurn;
-//row column
-//the extra +1 is for a null terminator, it makes reading in the data easier
-char map[16][25+1];
-pair<int,int> currLoc;
-int brickDelay;
-pair<int,int> enemyLoc;
-int enemyBrickDelay;
-//we can't have more enemies than grid squares!
-enemyInfo enemies [16*25];
-
 static inline void readMap(){
     for(int c=0;c<16;c++){
         gets(&(map[c][0]));
@@ -63,90 +41,15 @@ static inline void initGame(){
 
 }
 
-enum Action{
-    NONE=0,LEFT,RIGHT,DIG_LEFT,DIG_RIGHT,TOP,BOTTOM
-};
-
-const char *actionNames[7] = {
-    "NONE",
-    "LEFT",
-    "RIGHT",
-    "DIG_LEFT",
-    "DIG_RIGHT",
-    "TOP",
-    "BOTTOM"
-};
-
 static inline void act(Action act){
     puts(actionNames[act]);
     fflush(stdout);//don't remove this!
 }
 
-
-bool isSupported(){
-    return currLoc.first==15
-        || map[currLoc.first+1][currLoc.second]==BRICK
-        || map[currLoc.first+1][currLoc.second]==LADDER
-        || map[currLoc.first][currLoc.second]==LADDER
-        || map[currLoc.first+1][currLoc.second]==FILLED_BRICK;
-
-}
-
-bool isAlive(){
-    return currLoc.first!=-1;
-}
-
-bool canDoAction(Action act){
-    if(!isAlive() && act!=NONE)
-        return false;
-    switch(act){
-    case NONE:
-        return true;
-    case LEFT:
-        return currLoc.second>0
-            && isSupported()
-            && map[currLoc.first][currLoc.second-1]!=BRICK;
-    case RIGHT:
-        return 24>currLoc.second
-            && isSupported()
-            && map[currLoc.first][currLoc.second+1]!=BRICK;
-        //dig right and dig left seem flipped
-    case DIG_LEFT:
-        return brickDelay==0
-            && 15>currLoc.first
-            && currLoc.second>0
-            && isSupported()
-            && map[currLoc.first+1][currLoc.second-1]==BRICK
-            && map[currLoc.first][currLoc.second-1]!=BRICK
-            && map[currLoc.first][currLoc.second-1]!=LADDER;
-    case DIG_RIGHT:
-        return brickDelay==0
-            && 15>currLoc.first
-            && 24>currLoc.second
-            && isSupported()
-            && map[currLoc.first+1][currLoc.second+1]==BRICK
-            && map[currLoc.first][currLoc.second+1]!=BRICK
-            && map[currLoc.first][currLoc.second+1]!=LADDER;
-    case TOP:
-        return currLoc.first>0
-            && map[currLoc.first][currLoc.second]==LADDER
-            && map[currLoc.first-1][currLoc.second]!=BRICK;
-    case BOTTOM:
-        return 15>currLoc.first
-            && map[currLoc.first+1][currLoc.second]==LADDER;
-    }
-    return false;//should be unreachable
-}
-
 #define NEG_INF -100000000
 
-
-int distSq(const pair<int,int>& a, const pair<int,int>& b){
-    return (b.first-a.first)*(b.first-a.first)+(b.second-a.second)*(b.second-a.second);
-}
-
 //returns false when finished
-bool doTurn(){
+static bool doTurn(){
     int score[7];//the score for each of the possible commands
     memset(score,0,sizeof(int)*7);
     int nextTurn;

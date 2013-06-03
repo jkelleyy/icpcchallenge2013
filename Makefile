@@ -14,7 +14,9 @@ clean :
 	rm -f *.o bistromathics
 	rm -f $(DEPENDFILE)
 
-depend :
+depend : Makefile.depend
+
+Makefile.depend :
 	touch $(DEPENDFILE)
 	makedepend -Y -f $(DEPENDFILE) -- $(CXXFLAGS) -- $(SRCS) >&/dev/null
 

@@ -31,12 +31,18 @@ extern enemyInfo enemies[16*25];
 
 //bunch of tiny utility functions
 
+static inline bool isImpassable(char c){
+    return c==BRICK || c==FILLED_BRICK;
+}
+
+static inline bool isSolid(char c){
+    return c==BRICK || c==LADDER || c==FILLED_BRICK;
+}
+
 static inline bool isSupported(){
     return currLoc.first==15
-        || map[currLoc.first+1][currLoc.second]==BRICK
-        || map[currLoc.first+1][currLoc.second]==LADDER
-        || map[currLoc.first][currLoc.second]==LADDER
-        || map[currLoc.first+1][currLoc.second]==FILLED_BRICK;
+        || isSolid(map[currLoc.first+1][currLoc.second])
+        || map[currLoc.first][currLoc.second]==LADDER;
 }
 
 static inline bool isAlive(){

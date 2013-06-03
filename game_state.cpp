@@ -22,13 +22,11 @@ bool canDoAction(Action act){
     case LEFT:
         return currLoc.second>0
             && isSupported()
-            && map[currLoc.first][currLoc.second-1]!=BRICK
-            && map[currLoc.first][currLoc.second-1]!=FILLED_BRICK;
+            && !isImpassable(map[currLoc.first][currLoc.second-1]);
     case RIGHT:
         return 24>currLoc.second
             && isSupported()
-            && map[currLoc.first][currLoc.second+1]!=BRICK
-            && map[currLoc.first][currLoc.second+1]!=FILLED_BRICK;
+            && !isImpassable(map[currLoc.first][currLoc.second+1]);
     case DIG_LEFT:
         return brickDelay==0
             && 15>currLoc.first
@@ -48,8 +46,7 @@ bool canDoAction(Action act){
     case TOP:
         return currLoc.first>0
             && map[currLoc.first][currLoc.second]==LADDER
-            && map[currLoc.first-1][currLoc.second]!=BRICK
-            && map[currLoc.first-1][currLoc.second]!=FILLED_BRICK;
+            && !isImpassable(map[currLoc.first-1][currLoc.second]);
     case BOTTOM:
         return 15>currLoc.first
             && map[currLoc.first+1][currLoc.second]==LADDER;

@@ -52,8 +52,8 @@ void scoreSurvival(int *score){
             score[i]=NEG_INF;
     }
     //don't dig unless there's a reason to
-    score[DIG_LEFT]-=1;
-    score[DIG_RIGHT]-=1;
+    //score[DIG_LEFT]-=1;
+    //score[DIG_RIGHT]-=1;
     if(isAlive()){
         for(int i=0;i<nenemies;i++){
             if(enemies[i].loc.first!=-1 && !enemies[i].isTrapped){

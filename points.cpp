@@ -1,6 +1,9 @@
 #include "game_state.h"
 #include <queue>
 
+using namespace std;
+
+typedef pair<int,int> loc;
 
 bool visited[16][26];
 

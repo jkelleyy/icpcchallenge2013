@@ -38,6 +38,8 @@ struct enemyInfo{
     bool isTrapped;
 };
 
+
+
 extern enemyInfo enemies[16*25];
 
 //bunch of tiny utility functions
@@ -66,6 +68,14 @@ static inline int distSq(const pair<int,int>& a, const pair<int,int>& b){
 
 enum Action{
     NONE=0,LEFT,RIGHT,DIG_LEFT,DIG_RIGHT,TOP,BOTTOM
+};
+
+struct state
+{
+	Action first;
+	int firstAction;
+	pair<int,int> pos;
+	int depth;
 };
 
 static const char *actionNames[7] = {

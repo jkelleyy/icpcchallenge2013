@@ -226,8 +226,6 @@ void scoreSurvival(int *score){
                 }
             }
         }
-
     }
-
-
+    score[NONE]=0;//prefer anything do doing nothing
 }

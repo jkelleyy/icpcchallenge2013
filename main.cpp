@@ -124,6 +124,8 @@ static bool doTurn(){
 
     state s = pointsScore();
     TRACE("Action: %d pos: %d %d depth: %d\n",s.firstAction,s.pos.first,s.pos.second,s.depth);
+    if(s.firstAction!=NONE)
+        survivalScore[s.firstAction]+=50;
 
     vector<Action> bests;
     int maxScore = 0;

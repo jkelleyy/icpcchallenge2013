@@ -17,71 +17,71 @@ int enemyBrickDelay;
 //we can't have more enemies than grid squares!
 enemyInfo enemies [16*25];
 
-pair<int, int> simulateAction(Action act){
+pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())
 		return make_pair<int,int>(-1,-1);
 	//Falling
-	if(currLoc.first!=15 && !isSolid(map[currLoc.first+1][currLoc.second]))
-		return make_pair(currLoc.first+1,currLoc.second);
+	if(loc.first!=15 && !isSolid(map[loc.first+1][loc.second]))
+		return make_pair(loc.first+1,loc.second);
 	switch(act){
 	case NONE:
 	case DIG_LEFT:
 	case DIG_RIGHT:
-		return currLoc;
+		return loc;
 	case LEFT:
-		return make_pair(currLoc.first,currLoc.second-1);
+		return make_pair(loc.first,loc.second-1);
 	case RIGHT:
-		return make_pair(currLoc.first,currLoc.second+1);
+		return make_pair(loc.first,loc.second+1);
 	case TOP:
-		return make_pair(currLoc.first-1,currLoc.second);
+		return make_pair(loc.first-1,loc.second);
 	case BOTTOM:
-		return make_pair(currLoc.first+1,currLoc.second);
+		return make_pair(loc.first+1,loc.second);
 	}
-	
-	return currLoc;
+
+	return loc;
 }
 
-bool canDoAction(Action act){
+bool canDoAction(Action act,const pair<int,int>& loc){
     if(!isAlive() && act!=NONE)
         return false;
     switch(act){
     case NONE:
         return true;
     case LEFT:
-        return currLoc.second>0
-            && isSupported()
-            && !isImpassable(map[currLoc.first][currLoc.second-1]);
+        return loc.second>0
+            && isSupported(loc)
+            && !isImpassable(map[loc.first][loc.second-1]);
     case RIGHT:
-        return 24>currLoc.second
+        return 24>loc.second
             && isSupported()
-            && !isImpassable(map[currLoc.first][currLoc.second+1]);
+            && !isImpassable(map[loc.first][loc.second+1]);
     case DIG_LEFT:
         return brickDelay==0
-            && 15>currLoc.first
-            && currLoc.second>0
-            && isSupported()
+            && 15>loc.first
+            && loc.second>0
+            && isSupported(loc)
             //this seems silly
-            && map[currLoc.first+1][currLoc.second]!=FILLED_BRICK
-            && map[currLoc.first+1][currLoc.second-1]==BRICK
-            && map[currLoc.first][currLoc.second-1]!=BRICK
-            && map[currLoc.first][currLoc.second-1]!=LADDER;
+            && map[loc.first+1][loc.second]!=FILLED_BRICK
+            && map[loc.first+1][loc.second-1]==BRICK
+            && map[loc.first][loc.second-1]!=BRICK
+            && map[loc.first][loc.second-1]!=LADDER;
     case DIG_RIGHT:
         return brickDelay==0
-            && 15>currLoc.first
-            && 24>currLoc.second
-            && isSupported()
+            && 15>loc.first
+            && 24>loc.second
+            && isSupported(loc)
             //this seems silly
-            && map[currLoc.first+1][currLoc.second]!=FILLED_BRICK
-            && map[currLoc.first+1][currLoc.second+1]==BRICK
-            && map[currLoc.first][currLoc.second+1]!=BRICK
-            && map[currLoc.first][currLoc.second+1]!=LADDER;
+            && map[loc.first+1][loc.second]!=FILLED_BRICK
+            && map[loc.first+1][loc.second+1]==BRICK
+            && map[loc.first][loc.second+1]!=BRICK
+            && map[loc.first][loc.second+1]!=LADDER;
     case TOP:
-        return currLoc.first>0
-            && map[currLoc.first][currLoc.second]==LADDER
-            && !isImpassable(map[currLoc.first-1][currLoc.second]);
+        return loc.first>0
+            && map[loc.first][loc.second]==LADDER
+            && !isImpassable(map[loc.first-1][loc.second]);
     case BOTTOM:
         return 15>currLoc.first
-            && map[currLoc.first+1][currLoc.second]==LADDER;
+            && map[loc.first+1][loc.second]==LADDER;
     }
     return false;//should be unreachable
 }

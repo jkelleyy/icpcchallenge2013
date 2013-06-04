@@ -52,10 +52,10 @@ static inline bool isSolid(char c){
     return c==BRICK || c==LADDER || c==FILLED_BRICK;
 }
 
-static inline bool isSupported(){
-    return currLoc.first==15
-        || isSolid(map[currLoc.first+1][currLoc.second])
-        || map[currLoc.first][currLoc.second]==LADDER;
+static inline bool isSupported(const pair<int,int>& loc = currLoc){
+    return loc.first==15
+        || isSolid(map[loc.first+1][loc.second])
+        || map[loc.first][loc.second]==LADDER;
 }
 
 static inline bool isAlive(){
@@ -88,6 +88,6 @@ static const char *actionNames[7] = {
     "BOTTOM"
 };
 
-bool canDoAction(Action act);
-pair<int,int> simulateAction(Action act);
+bool canDoAction(Action act,const pair<int,int>& loc = currLoc);
+pair<int,int> simulateAction(Action act,const pair<int,int>& loc);
 #endif

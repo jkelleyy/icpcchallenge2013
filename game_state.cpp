@@ -7,8 +7,11 @@ int currTurn;
 //the extra +1 is for a null terminator, it makes reading in the data easier
 char map[16][25+1];
 pair<int,int> currLoc;
+pair<int,int> ourSpawn;
 int brickDelay;
 pair<int,int> enemyLoc;
+pair<int,int> enemySpawn;
+int enemySpawnDelay;
 int enemyBrickDelay;
 //we can't have more enemies than grid squares!
 enemyInfo enemies [16*25];
@@ -32,6 +35,8 @@ bool canDoAction(Action act){
             && 15>currLoc.first
             && currLoc.second>0
             && isSupported()
+            //this seems silly
+            && map[currLoc.first+1][currLoc.second]!=FILLED_BRICK
             && map[currLoc.first+1][currLoc.second-1]==BRICK
             && map[currLoc.first][currLoc.second-1]!=BRICK
             && map[currLoc.first][currLoc.second-1]!=LADDER;
@@ -40,6 +45,8 @@ bool canDoAction(Action act){
             && 15>currLoc.first
             && 24>currLoc.second
             && isSupported()
+            //this seems silly
+            && map[currLoc.first+1][currLoc.second]!=FILLED_BRICK
             && map[currLoc.first+1][currLoc.second+1]==BRICK
             && map[currLoc.first][currLoc.second+1]!=BRICK
             && map[currLoc.first][currLoc.second+1]!=LADDER;

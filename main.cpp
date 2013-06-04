@@ -65,14 +65,21 @@ static inline void initGame(){
     scanf(" %d\n",&nrounds);
     readMap();
     scanf(" %d %d ",&currLoc.first,&currLoc.second);
+    ourSpawn = currLoc;
+    brickDelay = 0;
     scanf(" %d %d ",&enemyLoc.first,&enemyLoc.second);
+    enemySpawn = enemyLoc;
+    enemySpawnDelay = 0;
+    enemyBrickDelay = 0;
     scanf(" %d\n",&nenemies);
     for(int i=0;i<nenemies;i++){
         //todo, find a better way of dealing with the program.
         scanf(" %d %d %s",&enemies[i].loc.first,&enemies[i].loc.second,tempBuffer);
+        enemies[i].spawn = enemies[i].loc;
         enemies[i].program = string(tempBuffer);
         enemies[i].master = -1;
         enemies[i].isTrapped = false;
+        enemies[i].spawnDelay = 0;
     }
     currTurn = -1;
 
@@ -94,6 +101,7 @@ static bool doTurn(){
     if(nextTurn==-1)
         return false;
     TRACE("TRACE: Starting turn #%d\n",nextTurn);
+    int turnsLost = nextTurn - currTurn -1;
     if(nextTurn!=currTurn+1)
         WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",nextTurn-currTurn-1);
     currTurn = nextTurn;
@@ -101,6 +109,19 @@ static bool doTurn(){
     int ignored;
     scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&ignored,&brickDelay);
     scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&ignored,&enemyBrickDelay);
+    if(enemyLoc.first==-1){
+        if(enemySpawnDelay==0){
+            enemySpawnDelay = max(49-turnsLost,1);
+        }
+        else{
+            enemySpawnDelay--;
+            if(enemySpawnDelay==0)
+                enemySpawnDelay=1;
+        }
+    }
+    else{
+        enemySpawnDelay = 0;
+    }
     for(int i=0;i<nenemies;i++){
         scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
 
@@ -110,6 +131,19 @@ static bool doTurn(){
         }
         else{
             enemies[i].isTrapped = false;
+        }
+        if(enemies[i].loc.first==-1){
+            if(enemies[i].spawnDelay==0){
+                enemies[i].spawnDelay=max(24-turnsLost,1);
+            }
+            else{
+                enemies[i].spawnDelay--;
+                if(enemies[i].spawnDelay==0)
+                    enemies[i].spawnDelay = 1;
+            }
+        }
+        else{
+            enemies[i].spawnDelay=0;
         }
     }
     for(int i=0;i<16;i++){
@@ -164,10 +198,12 @@ static bool doTurn(){
                     //also runaway
                     if(currLoc.second>enemies[i].loc.second){
                         score[RIGHT] += 10;
+                        score[DIG_LEFT] += 1;
                         score[LEFT] = NEG_INF;
                     }
                     else{
                         score[LEFT] += 10;
+                        score[DIG_RIGHT] += 1;
                         score[RIGHT] = NEG_INF;
                     }
                     if(currLoc.first>enemies[i].loc.first){
@@ -206,6 +242,31 @@ static bool doTurn(){
             //do that action
             if(score[i]>0 && isTrap(static_cast<Action>(i)))
                 score[i]-=200;//really bad, but not instant death,
+        }
+        //make sure not to walk into spawning enemies
+        for(int i=0;i<nenemies;i++){
+            if(enemies[i].spawnDelay==1){
+                switch(distSq(enemies[i].spawn,currLoc)){
+                case 0:
+                    score[NONE]=NEG_INF;
+                    score[DIG_LEFT] -= 100;
+                    score[DIG_RIGHT] -= 100;
+                    break;
+                case 1:
+                    if(enemies[i].spawn.first<currLoc.first){
+                        score[TOP]=NEG_INF;
+                    }
+                    else if(enemies[i].spawn.first>currLoc.first){
+                        score[BOTTOM]=NEG_INF;
+                    }
+                    else if(enemies[i].spawn.second<currLoc.second){
+                        score[LEFT]=NEG_INF;
+                    }
+                    else{
+                        score[RIGHT]=NEG_INF;
+                    }
+                }
+            }
         }
     }
 

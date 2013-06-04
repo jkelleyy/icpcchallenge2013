@@ -17,11 +17,18 @@ extern int nenemies;
 extern int currTurn;
 extern char map[16][26];
 extern pair<int,int> currLoc;
+extern pair<int,int> ourSpawn;
 extern int brickDelay;
 extern pair<int,int> enemyLoc;
+//if we lose some turns this could be an estimate,
+//if it's 0, then the enemy is alive
+extern pair<int,int> enemySpawn;
+extern int enemySpawnDelay;
 extern int enemyBrickDelay;
 struct enemyInfo{
     pair<int,int> loc;
+    pair<int,int> spawn;
+    int spawnDelay;//same comment as for enemySpawnDelay
     string program;
     int master;
     bool isTrapped;

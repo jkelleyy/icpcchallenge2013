@@ -71,9 +71,8 @@ static bool doTurn(){
         WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",missedTurns);
     currTurn = nextTurn;
     readMap();
-    int ignored;
-    scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&ignored,&brickDelay);
-    scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&ignored,&enemyBrickDelay);
+    scanf(" %d %d %*d %d",&currLoc.first,&currLoc.second,&brickDelay);
+    scanf(" %d %d %*d %d",&enemyLoc.first,&enemyLoc.second,&enemyBrickDelay);
     if(enemyLoc.first==-1){
         if(enemySpawnDelay==0){
             enemySpawnDelay = max(49-missedTurns,1);

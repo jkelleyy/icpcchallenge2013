@@ -80,8 +80,9 @@ bool canDoAction(Action act,const pair<int,int>& loc){
             && map[loc.first][loc.second]==LADDER
             && !isImpassable(map[loc.first-1][loc.second]);
     case BOTTOM:
-        return 15>currLoc.first
-            && map[loc.first+1][loc.second]==LADDER;
+        return 15>loc.first
+            && isSupported(loc)//can't move while falling
+            && !isImpassable(map[loc.first+1][loc.second]);
     }
     return false;//should be unreachable
 }

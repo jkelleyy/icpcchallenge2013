@@ -79,5 +79,5 @@ static const char *actionNames[7] = {
 };
 
 bool canDoAction(Action act);
-
+pair<int,int> simulateAction(Action act);
 #endif

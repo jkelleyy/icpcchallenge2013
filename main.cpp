@@ -2,6 +2,7 @@
 #include "util.h"
 #include "game_state.h"
 #include "survival.h"
+#include "points.h"
 #include <string>
 #include <vector>
 #include <cstdio>
@@ -120,6 +121,10 @@ static bool doTurn(){
     scoreSurvival(survivalScore);
 
     //TODO add points score
+
+    state s = pointsScore();
+    printf("Action: %d pos: %d %d depth: %d\n",s.firstAction,s.pos.first,s.pos.second,s.depth);
+
     vector<Action> bests;
     int maxScore = 0;
     for(int i=NONE;i<7;i++){

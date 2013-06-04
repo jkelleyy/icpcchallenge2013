@@ -17,6 +17,30 @@ int enemyBrickDelay;
 //we can't have more enemies than grid squares!
 enemyInfo enemies [16*25];
 
+pair<int, int> simulateAction(Action act){
+	if(!isAlive())
+		return make_pair<int,int>(-1,-1);
+	//Falling
+	if(currLoc.first!=15 && !isSolid(map[currLoc.first+1][currLoc.second]))
+		return make_pair(currLoc.first+1,currLoc.second);
+	switch(act){
+	case NONE:
+	case DIG_LEFT:
+	case DIG_RIGHT:
+		return currLoc;
+	case LEFT:
+		return make_pair(currLoc.first,currLoc.second-1);
+	case RIGHT:
+		return make_pair(currLoc.first,currLoc.second+1);
+	case TOP:
+		return make_pair(currLoc.first-1,currLoc.second);
+	case BOTTOM:
+		return make_pair(currLoc.first+1,currLoc.second);
+	}
+	
+	return currLoc;
+}
+
 bool canDoAction(Action act){
     if(!isAlive() && act!=NONE)
         return false;

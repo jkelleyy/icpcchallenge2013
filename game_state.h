@@ -29,7 +29,27 @@ extern pair<int,int> enemyLoc;
 extern pair<int,int> enemySpawn;
 extern int enemySpawnDelay;
 extern int enemyBrickDelay;
-struct enemyInfo{
+enum ChaseState{
+    //UNKNOWN is if we lose track and can't figure out what the enemy is doing
+    //if it's dead, use PATROL
+    CHASE_RED,CHASE_BLUE,RETURN_TO_PATROL,PATROL,UNKNOWN
+};
+
+static const char* chaseStateNames[] = {
+    "CHASE_RED",
+    "CHASE_BLUE",
+    "RETURN_TO_PATROL",
+    "PATROL",
+    "UNKNOWN"
+};
+
+//find a better place for these...
+#define RED 0
+#define BLUE 1
+#define NOONE -1
+
+
+struct EnemyInfo{
     pair<int,int> loc;
     pair<int,int> spawn;
     int spawnDelay;//same comment as for enemySpawnDelay
@@ -38,8 +58,9 @@ struct enemyInfo{
     bool isTrapped;
     int distSq;
     int distSqToOpponent;
+    ChaseState chaseState;
 };
-extern enemyInfo enemies[16*25];
+extern EnemyInfo enemies[16*25];
 
 //bunch of tiny utility functions
 

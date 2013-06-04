@@ -15,7 +15,7 @@ pair<int,int> enemySpawn;
 int enemySpawnDelay;
 int enemyBrickDelay;
 //we can't have more enemies than grid squares!
-enemyInfo enemies [16*25];
+EnemyInfo enemies [16*25];
 
 pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())

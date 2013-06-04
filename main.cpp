@@ -107,7 +107,7 @@ static bool doTurn(){
                 if(enemies[i].spawnDelay==0)
                     enemies[i].spawnDelay = 1;
             }
-
+            enemies[i].chaseState = PATROL;
         }
         else{
             enemies[i].spawnDelay=0;
@@ -119,6 +119,22 @@ static bool doTurn(){
                 enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
             else
                 enemies[i].distSqToOpponent = -1;
+            switch(computeChaseState(i).first){
+            case RED:
+                enemies[i].chaseState = CHASE_RED;
+                break;
+            case BLUE:
+                enemies[i].chaseState = CHASE_BLUE;
+                break;
+            case NOONE:
+                //TODO deal with return to patrol
+                if(enemies[i].chaseState == CHASE_RED ||
+                   enemies[i].chaseState == CHASE_BLUE){
+                    enemies[i].chaseState = UNKNOWN;
+                }
+                break;
+            }
+
         }
     }
     for(int i=0;i<16;i++){

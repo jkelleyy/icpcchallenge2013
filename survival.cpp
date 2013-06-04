@@ -51,14 +51,11 @@ void scoreSurvival(int *score){
         else
             score[i]=NEG_INF;
     }
-    //don't dig unless there's a reason to
-    //score[DIG_LEFT]-=1;
-    //score[DIG_RIGHT]-=1;
     if(isAlive()){
         for(int i=0;i<nenemies;i++){
             if(enemies[i].loc.first!=-1 && !enemies[i].isTrapped){
-                TRACE("DIST: %d\n",distSq(currLoc,enemies[i].loc));
-                switch(distSq(currLoc,enemies[i].loc)){
+                TRACE("DIST: %d\n",enemies[i].distSq);
+                switch(enemies[i].distSq){
                 case 1:
                     //run away
                     score[NONE] = NEG_INF;
@@ -135,6 +132,15 @@ void scoreSurvival(int *score){
                             score[TOP] += 10;
                         }
                     }
+                    break;
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                    //if the enemy is near, don't dig for fun...
+                    score[DIG_LEFT] -=1;
+                    score[DIG_RIGHT] -=1;
                     break;
                 }
             }

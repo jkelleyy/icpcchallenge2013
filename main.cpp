@@ -45,6 +45,8 @@ static inline void initGame(){
         enemies[i].master = -1;
         enemies[i].isTrapped = false;
         enemies[i].spawnDelay = 0;
+        enemies[i].distSq = distSq(enemies[i].loc,currLoc);
+        enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
     }
     currTurn = -1;
 
@@ -88,7 +90,7 @@ static bool doTurn(){
     for(int i=0;i<nenemies;i++){
         scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
 
-        if(enemies[i].loc.first!=-1 && map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK){
+        if(enemies[i].loc.first!=-1 && (map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK || map[enemies[i].loc.first][enemies[i].loc.second]==FILLED_BRICK)){
             map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
             enemies[i].isTrapped = true;
         }
@@ -96,6 +98,8 @@ static bool doTurn(){
             enemies[i].isTrapped = false;
         }
         if(enemies[i].loc.first==-1){
+            enemies[i].distSq = -1;
+            enemies[i].distSqToOpponent = -1;
             if(enemies[i].spawnDelay==0){
                 enemies[i].spawnDelay=max(24-missedTurns,1);
             }
@@ -104,9 +108,18 @@ static bool doTurn(){
                 if(enemies[i].spawnDelay==0)
                     enemies[i].spawnDelay = 1;
             }
+
         }
         else{
             enemies[i].spawnDelay=0;
+            if(currLoc.first!=-1 && !enemies[i].isTrapped)
+                enemies[i].distSq = distSq(enemies[i].loc,currLoc);
+            else
+                enemies[i].distSq = -1;
+            if(enemyLoc.first!=-1 && !enemies[i].isTrapped)
+                enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
+            else
+                enemies[i].distSqToOpponent = -1;
         }
     }
     for(int i=0;i<16;i++){

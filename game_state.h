@@ -36,10 +36,9 @@ struct enemyInfo{
     string program;
     int master;
     bool isTrapped;
+    int distSq;
+    int distSqToOpponent;
 };
-
-
-
 extern enemyInfo enemies[16*25];
 
 //bunch of tiny utility functions

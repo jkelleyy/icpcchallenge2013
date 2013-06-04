@@ -2,6 +2,20 @@
 #include "game_state.h"
 #include "util.h"
 
+static bool isSafeFall(pair<int,int> loc){
+    while(loc.first<15 && !isSolid(map[loc.first+1][loc.second])){
+        loc.first++;
+    }
+    //we are either on the last row or above a solid block, now check sides
+    if(map[loc.first][loc.second]!=REMOVED_BRICK)
+        return false;
+    if(loc.second>0 && !isImpassable(map[loc.first][loc.second-1]))
+        return false;
+    if(loc.second<24 && !isImpassable(map[loc.first][loc.second+1]))
+        return false;
+    return true;
+}
+
 //don't do stupid things like falling into traps...
 //assume that moving in that direction is valid...
 //
@@ -27,17 +41,7 @@ static bool isTrap(Action dir){
     case NONE:
         break;
     }
-    while(loc.first<15 && !isSolid(map[loc.first+1][loc.second])){
-        loc.first++;
-    }
-    //we are either on the last row or above a solid block, now check sides
-    if(map[loc.first][loc.second]!=REMOVED_BRICK)
-        return false;
-    if(loc.second>0 && !isImpassable(map[loc.first][loc.second-1]))
-        return false;
-    if(loc.second<24 && !isImpassable(map[loc.first][loc.second+1]))
-        return false;
-    return true;
+    return isSafeFall(loc);
 }
 
 void scoreSurvival(int *score){
@@ -108,11 +112,11 @@ void scoreSurvival(int *score){
                 case 4:
                     //try and kill
                     if(currLoc.second>enemies[i].loc.second){
-                        score[DIG_LEFT] += 20;
+                        score[DIG_LEFT] += 30;
                         score[LEFT] = NEG_INF;
                     }
                     else if(currLoc.second<enemies[i].loc.second){
-                        score[DIG_RIGHT] += 20;
+                        score[DIG_RIGHT] += 30;
                         score[RIGHT] = NEG_INF;
                     }
                     else if (currLoc.first>enemies[i].loc.first){
@@ -158,6 +162,63 @@ void scoreSurvival(int *score){
                 }
             }
         }
+        //try not to get stuck from digging
+        //this is a bit terrible
+        //TODO reduce copy paste
+        if(canDoAction(DIG_LEFT)){
+            if(currLoc.first>=14 || !isSafeFall(make_pair(currLoc.first+2,currLoc.second-1))){
+
+                //search right for an outlet
+                bool hasOutlet = false;
+                pair<int,int> loc = currLoc;
+                int stepCount=0;
+                while(loc.second<25 &&
+                      !isImpassable(map[loc.first][loc.second]) &&
+                      (isSolid(map[loc.first+1][loc.second]) ||
+                       isSafeFall(loc))){
+                    if(stepCount>5){
+                        hasOutlet = true;
+                        break;
+                    }
+                    if(map[loc.first][loc.second]==LADDER || map[loc.first+1][loc.second]==LADDER){
+                        hasOutlet=true;
+                        break;
+                    }
+                    loc.second++;
+                    stepCount++;
+                }
+                if(!hasOutlet){
+                    score[DIG_LEFT] -= 5;
+                }
+            }
+        }
+        if(canDoAction(DIG_RIGHT)){
+            if(currLoc.first>=14 || !isSafeFall(make_pair(currLoc.first+2,currLoc.second+1))){
+                //search left for an outlet
+                bool hasOutlet = false;
+                pair<int,int> loc = currLoc;
+                int stepCount=0;
+                while(loc.second>=0 &&
+                      !isImpassable(map[loc.first][loc.second]) &&
+                      (isSolid(map[loc.first+1][loc.second]) ||
+                       isSafeFall(loc))){
+                    if(stepCount>5){
+                        hasOutlet = true;
+                        break;
+                    }
+                    if(map[loc.first][loc.second]==LADDER || map[loc.first+1][loc.second]==LADDER){
+                        hasOutlet=true;
+                        break;
+                    }
+                    loc.second--;
+                    stepCount++;
+                }
+                if(!hasOutlet){
+                    score[DIG_RIGHT] -= 5;
+                }
+            }
+        }
+
     }
 
 

@@ -18,6 +18,7 @@ using namespace std;
 extern int nrounds;
 extern int nenemies;
 extern int currTurn;
+extern int missedTurns;
 extern char map[16][26];
 extern pair<int,int> currLoc;
 extern pair<int,int> ourSpawn;

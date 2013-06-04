@@ -3,6 +3,7 @@
 int nrounds;
 int nenemies;
 int currTurn;
+int missedTurns;
 //row column
 //the extra +1 is for a null terminator, it makes reading in the data easier
 char map[16][25+1];

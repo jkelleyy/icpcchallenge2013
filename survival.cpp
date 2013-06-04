@@ -9,9 +9,9 @@ static bool isSafeFall(pair<int,int> loc){
     //we are either on the last row or above a solid block, now check sides
     if(map[loc.first][loc.second]!=REMOVED_BRICK)
         return false;
-    if(loc.second>0 && !isImpassable(map[loc.first][loc.second-1]))
+    if(loc.second>0 && map[loc.first][loc.second-1]!=REMOVED_BRICK && !isImpassable(map[loc.first][loc.second-1]))
         return false;
-    if(loc.second<24 && !isImpassable(map[loc.first][loc.second+1]))
+    if(loc.second<24 && map[loc.first][loc.second+1]!=REMOVED_BRICK && !isImpassable(map[loc.first][loc.second+1]))
         return false;
     return true;
 }

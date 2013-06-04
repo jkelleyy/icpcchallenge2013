@@ -1,3 +1,6 @@
+#ifndef BISTROMATHICS_GAME_STATE_H
+#define BISTROMATHICS_GAME_STATE_H 1
+
 #include <utility>
 #include <string>
 
@@ -15,6 +18,7 @@ using namespace std;
 extern int nrounds;
 extern int nenemies;
 extern int currTurn;
+extern int missedTurns;
 extern char map[16][26];
 extern pair<int,int> currLoc;
 extern pair<int,int> ourSpawn;
@@ -75,3 +79,5 @@ static const char *actionNames[7] = {
 };
 
 bool canDoAction(Action act);
+
+#endif

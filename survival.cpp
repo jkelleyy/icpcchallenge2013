@@ -112,20 +112,28 @@ void scoreSurvival(int *score){
                 case 4:
                     //try and kill
                     if(currLoc.second>enemies[i].loc.second){
-                        score[DIG_LEFT] += 30;
-                        score[LEFT] = NEG_INF;
+                        if(!isImpassable(map[currLoc.first][currLoc.second-1])){
+                            score[DIG_LEFT] += 30;
+                            score[LEFT] = NEG_INF;
+                        }
                     }
                     else if(currLoc.second<enemies[i].loc.second){
-                        score[DIG_RIGHT] += 30;
-                        score[RIGHT] = NEG_INF;
+                        if(!isImpassable(map[currLoc.first][currLoc.second+1])){
+                            score[DIG_RIGHT] += 30;
+                            score[RIGHT] = NEG_INF;
+                        }
                     }
                     else if (currLoc.first>enemies[i].loc.first){
-                        score[TOP] = NEG_INF;
-                        score[BOTTOM] += 10;
+                        if(!isImpassable(map[currLoc.first-1][currLoc.second])){
+                            score[TOP] = NEG_INF;
+                            score[BOTTOM] += 10;
+                        }
                     }
                     else{
-                        score[BOTTOM] = NEG_INF;
-                        score[TOP] += 10;
+                        if(!isImpassable(map[currLoc.first+1][currLoc.second])){
+                            score[BOTTOM] = NEG_INF;
+                            score[TOP] += 10;
+                        }
                     }
                     break;
                 }

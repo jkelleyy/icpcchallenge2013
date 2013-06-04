@@ -21,7 +21,7 @@ pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())
 		return make_pair<int,int>(-1,-1);
 	//Falling
-	if(loc.first!=15 && !isSolid(map[loc.first+1][loc.second]))
+	if(!isSupported(loc))
 		return make_pair(loc.first+1,loc.second);
 	switch(act){
 	case NONE:

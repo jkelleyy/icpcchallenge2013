@@ -1,3 +1,6 @@
+#ifndef BISTROMATHICS_GAME_STATE_H
+#define BISTROMATHICS_GAME_STATE_H 1
+
 #include <utility>
 #include <string>
 
@@ -75,3 +78,5 @@ static const char *actionNames[7] = {
 };
 
 bool canDoAction(Action act);
+
+#endif

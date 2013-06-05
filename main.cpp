@@ -45,6 +45,8 @@ static inline void initGame(){
         enemies[i].master = -1;
         enemies[i].isTrapped = false;
         enemies[i].spawnDelay = 0;
+        enemies[i].distSq = distSq(enemies[i].loc,currLoc);
+        enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
     }
     currTurn = -1;
 
@@ -69,9 +71,8 @@ static bool doTurn(){
         WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",missedTurns);
     currTurn = nextTurn;
     readMap();
-    int ignored;
-    scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&ignored,&brickDelay);
-    scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&ignored,&enemyBrickDelay);
+    scanf(" %d %d %*d %d",&currLoc.first,&currLoc.second,&brickDelay);
+    scanf(" %d %d %*d %d",&enemyLoc.first,&enemyLoc.second,&enemyBrickDelay);
     if(enemyLoc.first==-1){
         if(enemySpawnDelay==0){
             enemySpawnDelay = max(49-missedTurns,1);
@@ -88,7 +89,7 @@ static bool doTurn(){
     for(int i=0;i<nenemies;i++){
         scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
 
-        if(enemies[i].loc.first!=-1 && map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK){
+        if(enemies[i].loc.first!=-1 && (map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK || map[enemies[i].loc.first][enemies[i].loc.second]==FILLED_BRICK)){
             map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
             enemies[i].isTrapped = true;
         }
@@ -96,6 +97,8 @@ static bool doTurn(){
             enemies[i].isTrapped = false;
         }
         if(enemies[i].loc.first==-1){
+            enemies[i].distSq = -1;
+            enemies[i].distSqToOpponent = -1;
             if(enemies[i].spawnDelay==0){
                 enemies[i].spawnDelay=max(24-missedTurns,1);
             }
@@ -104,9 +107,34 @@ static bool doTurn(){
                 if(enemies[i].spawnDelay==0)
                     enemies[i].spawnDelay = 1;
             }
+            enemies[i].chaseState = PATROL;
         }
         else{
             enemies[i].spawnDelay=0;
+            if(currLoc.first!=-1 && !enemies[i].isTrapped)
+                enemies[i].distSq = distSq(enemies[i].loc,currLoc);
+            else
+                enemies[i].distSq = -1;
+            if(enemyLoc.first!=-1 && !enemies[i].isTrapped)
+                enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
+            else
+                enemies[i].distSqToOpponent = -1;
+            switch(computeChaseState(i).first){
+            case RED:
+                enemies[i].chaseState = CHASE_RED;
+                break;
+            case BLUE:
+                enemies[i].chaseState = CHASE_BLUE;
+                break;
+            case NOONE:
+                //TODO deal with return to patrol
+                if(enemies[i].chaseState == CHASE_RED ||
+                   enemies[i].chaseState == CHASE_BLUE){
+                    enemies[i].chaseState = UNKNOWN;
+                }
+                break;
+            }
+
         }
     }
     for(int i=0;i<16;i++){
@@ -124,6 +152,8 @@ static bool doTurn(){
 
     state s = pointsScore();
     printf("Action: %d pos: %d %d depth: %d\n",s.first,s.pos.first,s.pos.second,s.depth);
+    if(s.firstAction!=NONE)
+        survivalScore[s.firstAction]+=50;
 
     vector<Action> bests;
     int maxScore = 0;

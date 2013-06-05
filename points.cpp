@@ -15,7 +15,7 @@ state pointsScore(){
 	currState.depth = 0;
 
 	for(int i =0; i<16; i++)
-		for(int j = 0; j <16; j++)
+		for(int j = 0; j <25; j++)
 			visited[i][j] = false;
 
 
@@ -23,14 +23,14 @@ state pointsScore(){
 	while(!q.empty()){
 		state newState = q.front();q.pop();
 		loc cur = newState.pos;
-		
+
 		if(map[cur.first][cur.second]==GOLD)
 			return newState;
 		else{
 			for(int i=NONE; i<7;i++){
 				Action a = static_cast<Action>(i);
-				if(canDoAction(a)){
-					loc alteredLoc = simulateAction(a);
+				if(canDoAction(a,cur)){
+					loc alteredLoc = simulateAction(a,cur);
 					if(!visited[alteredLoc.first][alteredLoc.second]){
 						visited[alteredLoc.first][alteredLoc.second] = true;
 						state alteredState;

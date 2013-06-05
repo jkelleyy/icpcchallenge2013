@@ -29,18 +29,38 @@ extern pair<int,int> enemyLoc;
 extern pair<int,int> enemySpawn;
 extern int enemySpawnDelay;
 extern int enemyBrickDelay;
-struct enemyInfo{
+enum ChaseState{
+    //UNKNOWN is if we lose track and can't figure out what the enemy is doing
+    //if it's dead, use PATROL
+    CHASE_RED,CHASE_BLUE,RETURN_TO_PATROL,PATROL,UNKNOWN
+};
+
+static const char* chaseStateNames[] = {
+    "CHASE_RED",
+    "CHASE_BLUE",
+    "RETURN_TO_PATROL",
+    "PATROL",
+    "UNKNOWN"
+};
+
+//find a better place for these...
+#define RED 0
+#define BLUE 1
+#define NOONE -1
+
+
+struct EnemyInfo{
     pair<int,int> loc;
     pair<int,int> spawn;
     int spawnDelay;//same comment as for enemySpawnDelay
     string program;
     int master;
     bool isTrapped;
+    int distSq;
+    int distSqToOpponent;
+    ChaseState chaseState;
 };
-
-
-
-extern enemyInfo enemies[16*25];
+extern EnemyInfo enemies[16*25];
 
 //bunch of tiny utility functions
 
@@ -52,10 +72,10 @@ static inline bool isSolid(char c){
     return c==BRICK || c==LADDER || c==FILLED_BRICK;
 }
 
-static inline bool isSupported(){
-    return currLoc.first==15
-        || isSolid(map[currLoc.first+1][currLoc.second])
-        || map[currLoc.first][currLoc.second]==LADDER;
+static inline bool isSupported(const pair<int,int>& loc = currLoc){
+    return loc.first==15
+        || isSolid(map[loc.first+1][loc.second])
+        || map[loc.first][loc.second]==LADDER;
 }
 
 static inline bool isAlive(){
@@ -87,6 +107,6 @@ static const char *actionNames[7] = {
     "BOTTOM"
 };
 
-bool canDoAction(Action act);
-pair<int,int> simulateAction(Action act);
+bool canDoAction(Action act,const pair<int,int>& loc = currLoc);
+pair<int,int> simulateAction(Action act,const pair<int,int>& loc);
 #endif

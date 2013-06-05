@@ -1,6 +1,11 @@
 #include "survival.h"
 #include "game_state.h"
 #include "util.h"
+#include <queue>
+#include <set>
+#include <utility>
+
+using namespace std;
 
 static bool isSafeFall(pair<int,int> loc){
     while(loc.first<15 && !isSolid(map[loc.first+1][loc.second])){
@@ -51,14 +56,20 @@ void scoreSurvival(int *score){
         else
             score[i]=NEG_INF;
     }
-    //don't dig unless there's a reason to
-    //score[DIG_LEFT]-=1;
-    //score[DIG_RIGHT]-=1;
+    for(int i=0;i<nenemies;i++){
+        TRACE("CHASE: %s\n",chaseStateNames[enemies[i].chaseState]);
+        if(enemies[i].chaseState==CHASE_RED){
+            score[DIG_LEFT]=min(0,score[DIG_LEFT]);
+            score[DIG_RIGHT]=min(0,score[DIG_RIGHT]);
+            //break;
+        }
+
+    }
     if(isAlive()){
         for(int i=0;i<nenemies;i++){
             if(enemies[i].loc.first!=-1 && !enemies[i].isTrapped){
-                TRACE("DIST: %d\n",distSq(currLoc,enemies[i].loc));
-                switch(distSq(currLoc,enemies[i].loc)){
+                TRACE("DIST: %d\n",enemies[i].distSq);
+                switch(enemies[i].distSq){
                 case 1:
                     //run away
                     score[NONE] = NEG_INF;
@@ -228,4 +239,144 @@ void scoreSurvival(int *score){
         }
     }
     score[NONE]=0;//prefer anything do doing nothing
+}
+
+static bool isActionReversible(Action a, pair<int,int>& loc){
+    //assumes the action is possible and that the current locations is supported
+    switch(a){
+    case NONE:
+        return true;
+    case DIG_LEFT:
+    case DIG_RIGHT:
+        return false;//this probably shouldn't be called with these anyways
+    case LEFT:
+        loc.second--;
+        break;
+    case RIGHT:
+        loc.second++;
+        break;
+    case TOP:
+        loc.first--;
+        break;
+    case BOTTOM:
+        loc.first++;
+        break;
+    }
+    return isSupported(loc) || (loc.first<15 && map[loc.first+1][loc.second]==REMOVED_BRICK);
+}
+
+#define RED 0
+#define BLUE 1
+#define NOONE -1
+struct info{
+    pair<int,int> loc;
+    int depth;
+    Action startDir;
+};
+
+//figure out who an enemy is chasing
+//and which direction it will chase in
+pair<int,Action> computeChaseState(int enemyId){
+    set<pair<int,int> >seen;
+    queue<info> locs;
+    info start;
+    start.loc = enemies[enemyId].loc;
+    if(!isSupported(start.loc)){
+        return make_pair(NOONE,NONE);//can't really chase while falling...
+    }
+    start.depth = 0;
+    start.startDir = NONE;
+    seen.insert(start.loc);
+    locs.push(start);
+    while(!locs.empty()){
+        info curr = locs.front();
+        locs.pop();
+        if((enemies[enemyId].master==0 && curr.depth>5) || curr.depth>8){
+            return make_pair(NOONE,NONE);
+        }
+        if(enemies[enemyId].loc==currLoc){
+            switch(enemies[enemyId].master){
+            case RED:
+                if(curr.depth>4){
+                    break;
+                }
+                else{
+                    return make_pair(RED,curr.startDir);
+                }
+            case BLUE:
+                if(curr.depth>8){
+                    //um.... shouldn't happen
+                    WARN("WARN: Unreachable code reached!\n");
+                    break;
+                }
+                else{
+                    return make_pair(RED,curr.startDir);
+                }
+            case NOONE:
+                if(curr.depth>5){
+                    WARN("WARN: Unreachable code reached!\n");
+                    break;
+                }
+                else{
+                    return make_pair(RED,curr.startDir);
+                }
+            }
+        }
+        if(enemies[enemyId].loc==enemyLoc){
+            switch(enemies[enemyId].master){
+            case RED:
+                if(curr.depth>8){
+                    WARN("WARN: Unreachable code reached!\n");
+                    break;
+                }
+                else{
+                    return make_pair(BLUE,curr.startDir);
+                }
+            case BLUE:
+                if(curr.depth>4){
+                    break;
+                }
+                else{
+                    return make_pair(BLUE,curr.startDir);
+                }
+            case NOONE:
+                if(curr.depth>5){
+                    WARN("WARN: Unreachable code reached!\n");
+                    break;
+                }
+                else{
+                    return make_pair(BLUE,curr.startDir);
+                }
+            }
+        }
+        else{
+#define DO_BRANCH(dir)                                                  \
+            if(canDoAction(dir,curr.loc) && isActionReversible(dir,curr.loc)){ \
+                info next;                                              \
+                next.depth = curr.depth+1;                              \
+                next.loc = simulateAction(dir,curr.loc);                \
+                next.startDir = curr.startDir;                          \
+                if(next.startDir==NONE) next.startDir = dir;            \
+                if(seen.find(next.loc)==seen.end()){                    \
+                    locs.push(next);                                    \
+                    seen.insert(next.loc);                              \
+                }                                                       \
+            }
+            //note the ordering here is important, don't mess it up
+            if(enemies[enemyId].spawn.second<12){
+                DO_BRANCH(TOP);
+                DO_BRANCH(RIGHT);
+                DO_BRANCH(BOTTOM);
+                DO_BRANCH(LEFT);
+            }
+            else{
+                DO_BRANCH(TOP);
+                DO_BRANCH(LEFT);
+                DO_BRANCH(BOTTOM);
+                DO_BRANCH(RIGHT);
+
+            }
+#undef DO_BRANCH
+        }
+    }
 }

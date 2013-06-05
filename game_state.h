@@ -73,7 +73,6 @@ enum Action{
 struct state
 {
 	Action first;
-	int firstAction;
 	pair<int,int> pos;
 	int depth;
 };

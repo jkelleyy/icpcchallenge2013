@@ -123,7 +123,7 @@ static bool doTurn(){
     //TODO add points score
 
     state s = pointsScore();
-    printf("Action: %d pos: %d %d depth: %d\n",s.firstAction,s.pos.first,s.pos.second,s.depth);
+    printf("Action: %d pos: %d %d depth: %d\n",s.first,s.pos.first,s.pos.second,s.depth);
 
     vector<Action> bests;
     int maxScore = 0;

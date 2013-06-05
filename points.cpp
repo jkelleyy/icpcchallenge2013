@@ -36,16 +36,11 @@ state pointsScore(){
 						state alteredState;
 						alteredState.pos = alteredLoc;
 						alteredState.depth = newState.depth+1;
-						if(alteredState.depth==1){
-							alteredState.firstAction = i;
-							alteredState.first = a;
-						}
-						else{
-							alteredState.firstAction = newState.firstAction;
+						if(alteredState.depth==1)
+							alteredState.first = i;
+						else
 							alteredState.first = newState.first;
-						}
 						q.push(alteredState);
-					
 					}
 				}
 			}

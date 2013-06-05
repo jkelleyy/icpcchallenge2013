@@ -265,9 +265,6 @@ static bool isActionReversible(Action a, pair<int,int>& loc){
     return isSupported(loc) || (loc.first<15 && map[loc.first+1][loc.second]==REMOVED_BRICK);
 }
 
-#define RED 0
-#define BLUE 1
-#define NOONE -1
 struct info{
     pair<int,int> loc;
     int depth;
@@ -294,7 +291,7 @@ pair<int,Action> computeChaseState(int enemyId){
         if((enemies[enemyId].master==0 && curr.depth>5) || curr.depth>8){
             return make_pair(NOONE,NONE);
         }
-        if(enemies[enemyId].loc==currLoc){
+        if(curr.loc==currLoc){
             switch(enemies[enemyId].master){
             case RED:
                 if(curr.depth>4){
@@ -322,7 +319,7 @@ pair<int,Action> computeChaseState(int enemyId){
                 }
             }
         }
-        if(enemies[enemyId].loc==enemyLoc){
+        if(curr.loc==enemyLoc){
             switch(enemies[enemyId].master){
             case RED:
                 if(curr.depth>8){
@@ -379,4 +376,5 @@ pair<int,Action> computeChaseState(int enemyId){
 #undef DO_BRANCH
         }
     }
+    return make_pair(NOONE,NONE);
 }

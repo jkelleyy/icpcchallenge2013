@@ -37,7 +37,7 @@ state pointsScore(){
 						alteredState.pos = alteredLoc;
 						alteredState.depth = newState.depth+1;
 						if(alteredState.depth==1)
-							alteredState.first = i;
+							alteredState.first = static_cast<Action>(i);
 						else
 							alteredState.first = newState.first;
 						q.push(alteredState);

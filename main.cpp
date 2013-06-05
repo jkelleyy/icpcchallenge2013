@@ -151,9 +151,9 @@ static bool doTurn(){
     //TODO add points score
 
     state s = pointsScore();
-    printf("Action: %d pos: %d %d depth: %d\n",s.first,s.pos.first,s.pos.second,s.depth);
-    if(s.firstAction!=NONE)
-        survivalScore[s.firstAction]+=50;
+    TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
+    if(s.first!=NONE)
+        survivalScore[s.first]+=50;
 
     vector<Action> bests;
     int maxScore = 0;

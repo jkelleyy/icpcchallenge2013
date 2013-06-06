@@ -49,7 +49,8 @@ static inline void initGame(){
         enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
     }
     currTurn = -1;
-
+    currScore = 0;
+    enemyScore = 0;
 }
 
 static inline void act(Action act){
@@ -71,8 +72,8 @@ static bool doTurn(){
         WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",missedTurns);
     currTurn = nextTurn;
     readMap();
-    scanf(" %d %d %*d %d",&currLoc.first,&currLoc.second,&brickDelay);
-    scanf(" %d %d %*d %d",&enemyLoc.first,&enemyLoc.second,&enemyBrickDelay);
+    scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&currScore,&brickDelay);
+    scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&enemyScore,&enemyBrickDelay);
     if(enemyLoc.first==-1){
         if(enemySpawnDelay==0){
             enemySpawnDelay = max(49-missedTurns,1);

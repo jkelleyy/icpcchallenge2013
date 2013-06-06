@@ -22,11 +22,13 @@ extern int missedTurns;
 extern char map[16][26];
 extern pair<int,int> currLoc;
 extern pair<int,int> ourSpawn;
+extern int currScore;
 extern int brickDelay;
 extern pair<int,int> enemyLoc;
+extern pair<int,int> enemySpawn;
+extern int enemyScore;
 //if we lose some turns this could be an estimate,
 //if it's 0, then the enemy is alive
-extern pair<int,int> enemySpawn;
 extern int enemySpawnDelay;
 extern int enemyBrickDelay;
 enum ChaseState{

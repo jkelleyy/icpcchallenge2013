@@ -9,9 +9,11 @@ int missedTurns;
 char map[16][25+1];
 pair<int,int> currLoc;
 pair<int,int> ourSpawn;
+int currScore;
 int brickDelay;
 pair<int,int> enemyLoc;
 pair<int,int> enemySpawn;
+int enemyScore;
 int enemySpawnDelay;
 int enemyBrickDelay;
 //we can't have more enemies than grid squares!

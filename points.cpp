@@ -13,7 +13,8 @@ state pointsScore(){
 	currState.pos = currLoc;
 	currState.first = NONE;
 	currState.depth = 0;
-
+	if(!isAlive())
+		return currState;
 	for(int i =0; i<16; i++)
 		for(int j = 0; j <25; j++)
 			visited[i][j] = false;

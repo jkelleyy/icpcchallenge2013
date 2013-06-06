@@ -3,6 +3,7 @@
 #include "game_state.h"
 #include "survival.h"
 #include "points.h"
+#include "watchdog.h"
 #include <string>
 #include <vector>
 #include <cstdio>
@@ -184,6 +185,7 @@ static bool doTurn(){
 
 int main(){
     srand(time(NULL));
+    startWatchdog();
     initGame();
     while(doTurn());
     TRACE("Game Finished!\n");

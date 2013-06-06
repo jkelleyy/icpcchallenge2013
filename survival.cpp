@@ -288,7 +288,7 @@ pair<int,Action> computeChaseState(int enemyId){
     while(!locs.empty()){
         info curr = locs.front();
         locs.pop();
-        if((enemies[enemyId].master==0 && curr.depth>5) || curr.depth>8){
+        if((enemies[enemyId].master==NOONE && curr.depth>5) || curr.depth>8){
             return make_pair(NOONE,NONE);
         }
         if(curr.loc==currLoc){

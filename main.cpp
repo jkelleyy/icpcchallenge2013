@@ -59,6 +59,57 @@ static inline void act(Action act){
 }
 
 
+//process the input for one of the enemies
+static void processEnemy(int i){
+    scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
+    if(enemies[i].loc.first!=-1 && (map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK || map[enemies[i].loc.first][enemies[i].loc.second]==FILLED_BRICK)){
+        map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
+        enemies[i].isTrapped = true;
+    }
+    else{
+        enemies[i].isTrapped = false;
+    }
+    if(enemies[i].loc.first==-1){
+        enemies[i].distSq = -1;
+        enemies[i].distSqToOpponent = -1;
+        if(enemies[i].spawnDelay==0){
+            enemies[i].spawnDelay=max(24-missedTurns,1);
+        }
+        else{
+            enemies[i].spawnDelay--;
+            if(enemies[i].spawnDelay==0)
+                enemies[i].spawnDelay = 1;
+        }
+        enemies[i].chaseState = PATROL;
+    }
+    else{
+        enemies[i].spawnDelay=0;
+        if(currLoc.first!=-1 && !enemies[i].isTrapped)
+            enemies[i].distSq = distSq(enemies[i].loc,currLoc);
+        else
+            enemies[i].distSq = -1;
+        if(enemyLoc.first!=-1 && !enemies[i].isTrapped)
+            enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
+        else
+            enemies[i].distSqToOpponent = -1;
+        switch(computeChaseState(i).first){
+        case RED:
+            enemies[i].chaseState = CHASE_RED;
+            break;
+        case BLUE:
+            enemies[i].chaseState = CHASE_BLUE;
+            break;
+        case NOONE:
+            //TODO deal with return to patrol
+            if(enemies[i].chaseState == CHASE_RED ||
+               enemies[i].chaseState == CHASE_BLUE){
+                enemies[i].chaseState = UNKNOWN;
+            }
+            break;
+        }
+
+    }
+}
 
 //returns false when finished
 static bool doTurn(){
@@ -88,55 +139,7 @@ static bool doTurn(){
         enemySpawnDelay = 0;
     }
     for(int i=0;i<nenemies;i++){
-        scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
-
-        if(enemies[i].loc.first!=-1 && (map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK || map[enemies[i].loc.first][enemies[i].loc.second]==FILLED_BRICK)){
-            map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
-            enemies[i].isTrapped = true;
-        }
-        else{
-            enemies[i].isTrapped = false;
-        }
-        if(enemies[i].loc.first==-1){
-            enemies[i].distSq = -1;
-            enemies[i].distSqToOpponent = -1;
-            if(enemies[i].spawnDelay==0){
-                enemies[i].spawnDelay=max(24-missedTurns,1);
-            }
-            else{
-                enemies[i].spawnDelay--;
-                if(enemies[i].spawnDelay==0)
-                    enemies[i].spawnDelay = 1;
-            }
-            enemies[i].chaseState = PATROL;
-        }
-        else{
-            enemies[i].spawnDelay=0;
-            if(currLoc.first!=-1 && !enemies[i].isTrapped)
-                enemies[i].distSq = distSq(enemies[i].loc,currLoc);
-            else
-                enemies[i].distSq = -1;
-            if(enemyLoc.first!=-1 && !enemies[i].isTrapped)
-                enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
-            else
-                enemies[i].distSqToOpponent = -1;
-            switch(computeChaseState(i).first){
-            case RED:
-                enemies[i].chaseState = CHASE_RED;
-                break;
-            case BLUE:
-                enemies[i].chaseState = CHASE_BLUE;
-                break;
-            case NOONE:
-                //TODO deal with return to patrol
-                if(enemies[i].chaseState == CHASE_RED ||
-                   enemies[i].chaseState == CHASE_BLUE){
-                    enemies[i].chaseState = UNKNOWN;
-                }
-                break;
-            }
-
-        }
+        processEnemy(i);
     }
     for(int i=0;i<16;i++){
         TRACE("MAP: %s\n",&map[i][0]);
@@ -188,4 +191,5 @@ int main(){
     initGame();
     while(doTurn());
     TRACE("Game Finished!\n");
+    return 0;
 }

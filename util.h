@@ -4,7 +4,7 @@
 #include <cstdio>
 using namespace std;
 
-#ifdef DEBUG_OUTPT_ON
+#ifdef DEBUG_OUTPUT_ON
 //various utilities
 //TODO add flags to turn these on and off
 #define TRACE(...) fprintf(stderr,__VA_ARGS__)

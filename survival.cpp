@@ -153,7 +153,7 @@ void scoreSurvival(int *score){
         for(int i=NONE;i<7;i++){
             //the positive score condition makes sure that we can actually
             //do that action
-			
+			/*
 			pair<int,int> next = simulateAction(static_cast<Action>(i), currLoc);
 			pair<int,int> next2 = simulateAction(NONE, next); //to account for falling
 			
@@ -190,6 +190,7 @@ void scoreSurvival(int *score){
 					TRACE("compo: avoiding changing from %d to %d\n", oldComponent, newComponent);
 				}
 			}
+			*/
 			if(score[i]>0 && isTrap(static_cast<Action>(i)))
                 score[i]-=200;//really bad, but not instant death,
 			

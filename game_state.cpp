@@ -56,17 +56,14 @@ pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 bool canDoAction2(Action act,const pair<int,int>& loc){
 	if(act != BOTTOM)
 		return canDoAction(act, loc);
-	
+
 	return (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
 		|| (canDoAction(RIGHT, loc) && canDoAction(DIG_LEFT, simulateAction(RIGHT, loc)));
-	
+
 }
 
-bool canDoAction(Action act,const pair<int,int>& loc){
-    if(!isAlive() && act!=NONE)
-        return false;
-    
-	switch(act){
+bool canDoActionRaw(Action act, const pair<int,int>& loc){
+    switch(act){
     case NONE:
         return true;
     case LEFT:
@@ -98,5 +95,59 @@ bool canDoAction(Action act,const pair<int,int>& loc){
         return isSupported(loc)//can't move while falling
             && !isImpassable(checkMapSafe(loc.first+1,loc.second));
     }
+    WARN("WARN: Unreachable code reached!\n");
+    return false;//should be unreachable
+}
+
+bool canDoActionPlayer(Action act,const pair<int,int>& loc){
+    if(!isAlive() && act!=NONE)
+        return false;
+    return canDoActionRaw(act,loc);
+}
+
+bool canDoActionOpponent(Action act,const pair<int,int>& loc){
+    if(enemyLoc.first!=-1 && act!=NONE)
+        return false;
+    return canDoActionRaw(act,loc);
+}
+
+static bool isSupportedEnemy(const pair<int,int>& loc){
+    return checkMapSafe(loc.first+1,loc.second)==REMOVED_BRICK || isSupported(loc);
+}
+
+bool canDoActionEnemy(Action act,const pair<int,int>& loc){
+    switch(act){
+    case NONE:
+        return true;
+    case LEFT:
+        return isSupportedEnemy(loc)
+            && !isImpassable(checkMapSafe(loc.first,loc.second-1));
+    case RIGHT:
+        return isSupportedEnemy(loc)
+            && !isImpassable(checkMapSafe(loc.first,loc.second+1));
+    case DIG_LEFT:
+        return brickDelay==0
+            && isSupportedEnemy(loc)
+            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
+            && checkMapSafe(loc.first+1,loc.second-1)==BRICK
+            && checkMapSafe(loc.first,loc.second-1)!=BRICK
+            && checkMapSafe(loc.first,loc.second-1)!=LADDER;
+    case DIG_RIGHT:
+        return brickDelay==0
+            && isSupportedEnemy(loc)
+            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
+            && checkMapSafe(loc.first+1,loc.second+1)==BRICK
+            && checkMapSafe(loc.first,loc.second+1)!=BRICK
+            && checkMapSafe(loc.first,loc.second+1)!=LADDER;
+    case TOP:
+        return loc.first>0
+            && isSupportedEnemy(loc)//can't move while falling
+            && map[loc.first][loc.second]==LADDER
+            && !isImpassable(map[loc.first-1][loc.second]);
+    case BOTTOM:
+        return isSupportedEnemy(loc)//can't move while falling
+            && !isImpassable(checkMapSafe(loc.first+1,loc.second));
+    }
+    WARN("WARN: Unreachable code reached!\n");
     return false;//should be unreachable
 }

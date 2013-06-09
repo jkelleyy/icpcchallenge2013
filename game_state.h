@@ -132,7 +132,15 @@ static const char *actionNames[7] = {
     "BOTTOM"
 };
 
-bool canDoAction(Action act,const pair<int,int>& loc = currLoc);
+bool canDoActionRaw(Action act, const pair<int,int>& loc);
+bool canDoActionPlayer(Action act, const pair<int,int>& loc = currLoc);
+bool canDoActionOpponent(Action act, const pair<int,int>& loc = enemyLoc);
+bool canDoActionEnemy(Action act, const pair<int,int>& loc);
+
+//dont use this one if possible, it will be removed soon.
+static inline bool canDoAction(Action act,const pair<int,int>& loc = currLoc){
+    canDoActionPlayer(act,loc);
+}
 bool canDoAction2(Action act,const pair<int,int>& loc = currLoc);
 pair<int,int> simulateAction(Action act,const pair<int,int>& loc);
 #endif

@@ -1,7 +1,6 @@
-
 SRCS=$(wildcard ./*.cpp)
 OBJS=$(SRCS:.cpp=.o)
-CXXFLAGS=-lrt -pthread -O
+CXXFLAGS=-Wall -Wextra -O
 
 DEPENDFILE=Makefile.depend
 

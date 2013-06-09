@@ -8,11 +8,11 @@ int missedTurns;
 //the extra +1 is for a null terminator, it makes reading in the data easier
 char map[16][25+1];
 
-int component[16][26];
 bool reachable[16][26];
 int depth[16][26];
 pair<int,int> earliest_parent[16][26];
 int gold_collected[16][26];
+int component[16][26];
 
 pair<int,int> currLoc;
 pair<int,int> ourSpawn;

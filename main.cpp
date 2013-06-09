@@ -41,17 +41,14 @@ static inline void printReachableMatrix()
 	}
 }
 
-static inline void printTrapMatrix()
+static inline void printComponentMatrix()
 {
 	TRACE("Trap matrix:\n");
 	for(int i = 0; i < 16; i++)
 	{
 		TRACE("trap ");
 		for(int j = 0; j < 26; j++)
-			if(trap[i][j])
-				TRACE("1 ");
-			else
-				TRACE("0 ");
+			TRACE("%2d ", component[i][j]);
 		TRACE("\n");
 	}
 }
@@ -139,6 +136,8 @@ static inline pair<int,int> getEarliestParents(int i, int j)
 
 static inline void findTraps()
 {
+	TRACE("findTraps checkpoint 1111\n");
+	
 	int startx = ourSpawn.first;
 	int starty = ourSpawn.second;
 	
@@ -148,7 +147,7 @@ static inline void findTraps()
 		for(int j = 0; j < 26; j++)
 		{
 			reachable[i][j] = false;
-			trap[i][j] = false;
+			component[i][j] = -1;
 			depth[i][j] = POS_INF;
 			earliest_parent[i][j] = make_pair(i, j);
 			if(map[i][j] == GOLD)
@@ -192,23 +191,30 @@ static inline void findTraps()
 			if(depth[i][j] != POS_INF)
 				count[depth[i][j]]++;
 	
+	int compo = -1;
+	int temp_map[600];
+	for(int i = 0; i < 600; i++)
+	{
+		if(count[i] > 1)
+			compo++;
+		temp_map[i] = compo;
+	}
 	
-	int compo = 0;
-	while(count[trap_threshold + 1] >= count[trap_threshold])
-		trap_threshold++;
-	TRACE("Trap calc done, threshold = %d\n", trap_threshold);
 	for(int i = 0; i < 16; i++)
 		for(int j = 0; j < 26; j++)
-			if(depth[i][j] > trap_threshold)
-				trap[i][j] = true;
-		
+			if(depth[i][j] != POS_INF)
+				component[i][j] = temp_map[depth[i][j]];
+			else
+				component[i][j] = -1;
+	TRACE("component calc done\n");
 	
-	printTrapMatrix();
+	printComponentMatrix();
 	
 }
 
 static inline void initGame(){
-    scanf(" %d\n",&nrounds);
+    TRACE("findTraps checkpoint 1111\n");
+	scanf(" %d\n",&nrounds);
     readMap();
     scanf(" %d %d ",&currLoc.first,&currLoc.second);
     ourSpawn = currLoc;
@@ -232,7 +238,8 @@ static inline void initGame(){
     currTurn = -1;
     currScore = 0;
     enemyScore = 0;
-
+	TRACE("findTraps checkpoint 1111\n");
+	
 	findTraps();
 }
 
@@ -371,7 +378,8 @@ static bool doTurn(){
 
 int main(){
     srand(time(NULL));
-    initGame();
+    TRACE("findTraps checkpoint 1111\n");
+	initGame();
     while(doTurn());
     TRACE("Game Finished!\n");
     return 0;

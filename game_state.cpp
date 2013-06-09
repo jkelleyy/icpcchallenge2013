@@ -1,4 +1,5 @@
 #include "game_state.h"
+#include "util.h"
 
 int nrounds;
 int nenemies;

@@ -139,7 +139,7 @@ bool canDoActionEnemy(Action act, const pair<int,int>& loc);
 
 //dont use this one if possible, it will be removed soon.
 static inline bool canDoAction(Action act,const pair<int,int>& loc = currLoc){
-    canDoActionPlayer(act,loc);
+    return canDoActionPlayer(act,loc);
 }
 bool canDoAction2(Action act,const pair<int,int>& loc = currLoc);
 pair<int,int> simulateAction(Action act,const pair<int,int>& loc);

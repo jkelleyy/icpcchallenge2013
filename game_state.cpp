@@ -70,42 +70,33 @@ bool canDoAction(Action act,const pair<int,int>& loc){
     case NONE:
         return true;
     case LEFT:
-        return loc.second>0
-            && isSupported(loc)
-            && !isImpassable(map[loc.first][loc.second-1]);
+        return isSupported(loc)
+            && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case RIGHT:
-        return 24>loc.second
-            && isSupported()
-            && !isImpassable(map[loc.first][loc.second+1]);
+        return isSupported()
+            && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case DIG_LEFT:
         return brickDelay==0
-            && 15>loc.first
-            && loc.second>0
             && isSupported(loc)
-            //this seems silly
-            && map[loc.first+1][loc.second]!=FILLED_BRICK
-            && map[loc.first+1][loc.second-1]==BRICK
-            && map[loc.first][loc.second-1]!=BRICK
-            && map[loc.first][loc.second-1]!=LADDER;
+            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
+            && checkMapSafe(loc.first+1,loc.second-1)==BRICK
+            && checkMapSafe(loc.first,loc.second-1)!=BRICK
+            && checkMapSafe(loc.first,loc.second-1)!=LADDER;
     case DIG_RIGHT:
         return brickDelay==0
-            && 15>loc.first
-            && 24>loc.second
             && isSupported(loc)
-            //this seems silly
-            && map[loc.first+1][loc.second]!=FILLED_BRICK
-            && map[loc.first+1][loc.second+1]==BRICK
-            && map[loc.first][loc.second+1]!=BRICK
-            && map[loc.first][loc.second+1]!=LADDER;
+            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
+            && checkMapSafe(loc.first+1,loc.second+1)==BRICK
+            && checkMapSafe(loc.first,loc.second+1)!=BRICK
+            && checkMapSafe(loc.first,loc.second+1)!=LADDER;
     case TOP:
         return loc.first>0
             && isSupported(loc)//can't move while falling
             && map[loc.first][loc.second]==LADDER
             && !isImpassable(map[loc.first-1][loc.second]);
     case BOTTOM:
-        return 15>loc.first
-            && isSupported(loc)//can't move while falling
-            && !isImpassable(map[loc.first+1][loc.second]);
+        return isSupported(loc)//can't move while falling
+            && !isImpassable(checkMapSafe(loc.first+1,loc.second));
     }
     return false;//should be unreachable
 }

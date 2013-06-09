@@ -73,14 +73,26 @@ struct EnemyInfo{
 };
 extern EnemyInfo enemies[16*25];
 
+
+//returns '\0' if it's off the map
+static inline char checkMapSafe(int r, int c){
+    if(r>=0 && r<15 && c>=0 && c<25)
+        return map[r][c];
+    return '\0';
+}
+
+static inline char checkMapSafe(const pair<int,int>& loc){
+    return checkMapSafe(loc.first,loc.second);
+}
+
 //bunch of tiny utility functions
 
 static inline bool isImpassable(char c){
-    return c==BRICK || c==FILLED_BRICK;
+    return c==BRICK || c==FILLED_BRICK || c=='\0';
 }
 
 static inline bool isSolid(char c){
-    return c==BRICK || c==LADDER || c==FILLED_BRICK;
+    return c==BRICK || c==LADDER || c==FILLED_BRICK || c=='\0';
 }
 
 static inline bool isBrick(const pair<int,int>& loc){
@@ -88,9 +100,7 @@ static inline bool isBrick(const pair<int,int>& loc){
 }
 
 static inline bool isSupported(const pair<int,int>& loc = currLoc){
-    return loc.first==15
-        || isSolid(map[loc.first+1][loc.second])
-        || map[loc.first][loc.second]==LADDER;
+    return isSolid(checkMapSafe(loc.first+1,loc.second)) || map[loc.first][loc.second]==LADDER;
 }
 
 static inline bool isAlive(){

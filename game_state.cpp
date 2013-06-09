@@ -71,7 +71,7 @@ bool canDoAction(Action act,const pair<int,int>& loc){
         return true;
     case LEFT:
         return isSupported(loc)
-            && !isImpassable(checkMapSafe(loc.first,loc.second+1));
+            && !isImpassable(checkMapSafe(loc.first,loc.second-1));
     case RIGHT:
         return isSupported()
             && !isImpassable(checkMapSafe(loc.first,loc.second+1));

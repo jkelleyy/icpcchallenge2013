@@ -13,12 +13,12 @@ static bool isSafeFall(pair<int,int> loc){
     }
     //we are either on the last row or above a solid block, now check sides
     if(map[loc.first][loc.second]!=REMOVED_BRICK)
-        return false;
+        return true;
     if(loc.second>0 && map[loc.first][loc.second-1]!=REMOVED_BRICK && !isImpassable(map[loc.first][loc.second-1]))
-        return false;
+        return true;
     if(loc.second<24 && map[loc.first][loc.second+1]!=REMOVED_BRICK && !isImpassable(map[loc.first][loc.second+1]))
-        return false;
-    return true;
+        return true;
+    return false;
 }
 
 //don't do stupid things like falling into traps...
@@ -46,7 +46,7 @@ static bool isTrap(Action dir){
     case NONE:
         break;
     }
-    return isSafeFall(loc);
+    return !isSafeFall(loc);
 }
 
 void scoreSurvival(int *score){
@@ -191,16 +191,18 @@ void scoreSurvival(int *score){
                 bool hasOutlet = false;
                 pair<int,int> loc = currLoc;
                 int stepCount=0;
-                while(loc.second<25 &&
-                      !isImpassable(map[loc.first][loc.second]) &&
-                      (isSolid(map[loc.first+1][loc.second]) ||
-                       isSafeFall(loc))){
+                while(loc.second<25 && !isImpassable(map[loc.first][loc.second])){
                     if(stepCount>5){
                         hasOutlet = true;
                         break;
                     }
                     if(map[loc.first][loc.second]==LADDER || map[loc.first+1][loc.second]==LADDER){
                         hasOutlet=true;
+                        break;
+                    }
+                    if(!isSupported(loc)){
+                        if(isSafeFall(loc))
+                            hasOutlet = true;
                         break;
                     }
                     loc.second++;
@@ -217,16 +219,18 @@ void scoreSurvival(int *score){
                 bool hasOutlet = false;
                 pair<int,int> loc = currLoc;
                 int stepCount=0;
-                while(loc.second>=0 &&
-                      !isImpassable(map[loc.first][loc.second]) &&
-                      (isSolid(map[loc.first+1][loc.second]) ||
-                       isSafeFall(loc))){
+                while(loc.second>=0 && !isImpassable(map[loc.first][loc.second])){
                     if(stepCount>5){
                         hasOutlet = true;
                         break;
                     }
                     if(map[loc.first][loc.second]==LADDER || map[loc.first+1][loc.second]==LADDER){
                         hasOutlet=true;
+                        break;
+                    }
+                    else if(!isSupported(loc)){
+                        if(isSafeFall(loc))
+                            hasOutlet = true;
                         break;
                     }
                     loc.second--;

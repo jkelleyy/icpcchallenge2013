@@ -73,7 +73,7 @@ bool canDoAction(Action act,const pair<int,int>& loc){
         return isSupported(loc)
             && !isImpassable(checkMapSafe(loc.first,loc.second-1));
     case RIGHT:
-        return isSupported()
+        return isSupported(loc)
             && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case DIG_LEFT:
         return brickDelay==0

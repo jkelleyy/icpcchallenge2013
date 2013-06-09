@@ -43,10 +43,10 @@ static inline void printReachableMatrix()
 
 static inline void printComponentMatrix()
 {
-	TRACE("Trap matrix:\n");
+	TRACE("Component matrix:\n");
 	for(int i = 0; i < 16; i++)
 	{
-		TRACE("trap ");
+		TRACE("comp ");
 		for(int j = 0; j < 26; j++)
 			TRACE("%2d ", component[i][j]);
 		TRACE("\n");
@@ -134,14 +134,11 @@ static inline pair<int,int> getEarliestParents(int i, int j)
 	return earliest_parent[i][j];
 }
 
-static inline void findTraps()
+static inline void findComponents()
 {
 	TRACE("findTraps checkpoint 1111\n");
 	
-	int startx = ourSpawn.first;
-	int starty = ourSpawn.second;
-	
-	int totalGoldOnMap = 0;
+	totalGoldOnMap = 0;
 	for(int i = 0; i < 16; i++)
 	{
 		for(int j = 0; j < 26; j++)
@@ -209,7 +206,18 @@ static inline void findTraps()
 	TRACE("component calc done\n");
 	
 	printComponentMatrix();
+
+	for(int i = 0; i < 600; i++)
+		gold_comp[i] = 0;
+
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(map[i][j] == GOLD)
+				gold_comp[component[i][j]]++;
 	
+	for(int i = 0; i < 600; i++)
+		if(gold_comp[i] > gold_comp[max_gold_comp])
+			max_gold_comp = i;
 }
 
 static inline void initGame(){
@@ -240,7 +248,7 @@ static inline void initGame(){
     enemyScore = 0;
 	TRACE("findTraps checkpoint 1111\n");
 	
-	findTraps();
+	findComponents();
 }
 
 static inline void act(Action act){
@@ -378,8 +386,7 @@ static bool doTurn(){
 
 int main(){
     srand(time(NULL));
-    TRACE("findTraps checkpoint 1111\n");
-	initGame();
+    initGame();
     while(doTurn());
     TRACE("Game Finished!\n");
     return 0;

@@ -11,7 +11,9 @@ char map[16][25+1];
 bool reachable[16][26];
 int depth[16][26];
 pair<int,int> earliest_parent[16][26];
-int gold_collected[16][26];
+int gold_comp[600];
+int totalGoldOnMap;
+int max_gold_comp;
 int component[16][26];
 
 pair<int,int> currLoc;

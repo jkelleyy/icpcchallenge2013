@@ -153,14 +153,47 @@ void scoreSurvival(int *score){
         for(int i=NONE;i<7;i++){
             //the positive score condition makes sure that we can actually
             //do that action
-			//pair<int,int> next = simulateAction(static_cast<Action>(i), currLoc);
-			//pair<int,int> next2 = simulateAction(NONE, next); //to account for falling
-
+			
+			pair<int,int> next = simulateAction(static_cast<Action>(i), currLoc);
+			pair<int,int> next2 = simulateAction(NONE, next); //to account for falling
+			
+			//TODO: fix below code, shouldn't need >= 0 below it.
+			for(int ii = 0; ii < 20; ii++)
+			{
+				next2 = simulateAction(NONE, next2); //to account for falling
+			}
+			
+			if((next2.first >= 0) && (next2.second>= 0))
+			{
+				int oldComponent = component[currLoc.first][currLoc.second];
+				int newComponent = component[next2.first][next2.second];
+			
+				bool shouldChangeComponent = true;
+				if((oldComponent >= 0) && (newComponent >= 0) && (oldComponent != newComponent))
+				{
+					shouldChangeComponent = false;
+					if(oldComponent < max_gold_comp)
+						shouldChangeComponent = true;
+					if(gold_comp[newComponent] >= gold_comp[oldComponent])
+						shouldChangeComponent = true;
+					if(gold_comp[newComponent] >= totalGoldOnMap / 2)
+						shouldChangeComponent = true;
+				}
+            
+				if(shouldChangeComponent)
+				{
+					TRACE("compo: changing from %d to %d\n", oldComponent, newComponent);
+				}
+				else
+				{
+					score -= 200;
+					TRACE("compo: avoiding changing from %d to %d\n", oldComponent, newComponent);
+				}
+			}
 			if(score[i]>0 && isTrap(static_cast<Action>(i)))
                 score[i]-=200;//really bad, but not instant death,
-			//if(trap[next.first][next.second] || trap[next2.first][next2.second])
-			//	score[i]-=300;
-            
+			
+			
         }
         //make sure not to walk into spawning enemies
         for(int i=0;i<nenemies;i++){

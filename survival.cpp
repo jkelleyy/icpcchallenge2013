@@ -186,13 +186,13 @@ void scoreSurvival(int *score){
 				}
 				else
 				{
-					score -= 200;
+					//score[i] -= 1000;
 					TRACE("compo: avoiding changing from %d to %d\n", oldComponent, newComponent);
 				}
 			}
 			*/
 			if(score[i]>0 && isTrap(static_cast<Action>(i)))
-                score[i]-=200;//really bad, but not instant death,
+				score[i]-=200;//really bad, but not instant death,
 			
 			
         }

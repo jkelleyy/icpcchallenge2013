@@ -27,6 +27,187 @@ static inline void readMap(){
 
 static char tempBuffer[1000];
 
+static inline void printReachableMatrix()
+{
+	TRACE("Reachable matrix:\n");
+	for(int i = 0; i < 16; i++)
+	{
+		TRACE("reachable ");
+		for(int j = 0; j < 26; j++)
+			if(reachable[i][j])
+				TRACE("1 ");
+			else
+				TRACE("0 ");
+		TRACE("\n");
+	}
+}
+
+static inline void printTrapMatrix()
+{
+	TRACE("Trap matrix:\n");
+	for(int i = 0; i < 16; i++)
+	{
+		TRACE("trap ");
+		for(int j = 0; j < 26; j++)
+			if(trap[i][j])
+				TRACE("1 ");
+			else
+				TRACE("0 ");
+		TRACE("\n");
+	}
+}
+
+static inline void printParentDepthMatrix()
+{
+	TRACE("Depth matrix:\n");
+	for(int i = 0; i < 16; i++)
+	{
+		TRACE("depth_matrix ");
+		for(int j = 0; j < 26; j++)
+		{
+			if(depth[i][j] == POS_INF)
+				TRACE(" - ");
+			else
+				TRACE("%2d ", depth[i][j]);
+		}
+		TRACE("\n");
+	}
+}
+
+static inline void printEarliestParents()
+{
+	TRACE("Earliest Parent matrix:\n");
+	for(int i = 0; i < 16; i++)
+	{
+		TRACE("earliest_parent ");
+		for(int j = 0; j < 26; j++)
+			TRACE("%2d,%2d ", earliest_parent[i][j].first, earliest_parent[i][j].second);
+		TRACE("\n");
+	}
+}
+
+static inline void dfs(pair<int,int> curr, int curr_depth)
+{
+	int curr_x = curr.first;
+	int curr_y = curr.second;
+
+	if(reachable[curr_x][curr_y])
+		return;
+	
+	reachable[curr_x][curr_y] = true;
+	depth[curr_x][curr_y] = curr_depth;
+
+	if(!isSupported(curr))
+	{
+		pair<int,int> next = simulateAction(BOTTOM, curr);
+		dfs(next, curr_depth + 1);
+		pair<int,int> parent_ = earliest_parent[next.first][next.second];
+		if(depth[curr_x][curr_y] > depth[parent_.first][parent_.second])
+		{
+			depth[curr_x][curr_y] = depth[parent_.first][parent_.second];
+			earliest_parent[curr.first][curr.second] = make_pair(parent_.first, parent_.second);
+		}
+		return;
+	}
+
+	int most_gold = 0;
+	for(int i = 0; i < 7; i++)
+	{
+		if(canDoAction2(static_cast<Action>(i), curr))
+		{
+			pair<int,int> next = simulateAction(static_cast<Action>(i), curr);
+			dfs(next, curr_depth + 1);
+			pair<int,int> parent_ = earliest_parent[next.first][next.second];
+			if(depth[curr_x][curr_y] > depth[parent_.first][parent_.second])
+			{
+				depth[curr_x][curr_y] = depth[parent_.first][parent_.second];
+				earliest_parent[curr.first][curr.second] = make_pair(parent_.first, parent_.second);
+			}
+		}
+	}
+
+	return;
+}
+
+static inline pair<int,int> getEarliestParents(int i, int j)
+{
+	if((earliest_parent[i][j].first == i) && (earliest_parent[i][j].second == j))
+		return earliest_parent[i][j]; //make_pair(i, j);
+	earliest_parent[i][j] = getEarliestParents(earliest_parent[i][j].first, earliest_parent[i][j].second);
+
+	return earliest_parent[i][j];
+}
+
+static inline void findTraps()
+{
+	int startx = ourSpawn.first;
+	int starty = ourSpawn.second;
+	
+	int totalGoldOnMap = 0;
+	for(int i = 0; i < 16; i++)
+	{
+		for(int j = 0; j < 26; j++)
+		{
+			reachable[i][j] = false;
+			trap[i][j] = false;
+			depth[i][j] = POS_INF;
+			earliest_parent[i][j] = make_pair(i, j);
+			if(map[i][j] == GOLD)
+				totalGoldOnMap++;
+		}
+	}
+	
+	dfs(ourSpawn, 0);
+	TRACE("saurabh: dfs done");
+	
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			earliest_parent[i][j] = getEarliestParents(i, j);
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			earliest_parent[i][j] = getEarliestParents(i, j);
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			earliest_parent[i][j] = getEarliestParents(i, j);
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			earliest_parent[i][j] = getEarliestParents(i, j);
+	TRACE("findTraps checkpoint 3\n");
+	printEarliestParents();
+	
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			depth[i][j] = depth[earliest_parent[i][j].first][earliest_parent[i][j].second];
+	
+	
+	TRACE("<saurabh>\n");
+	//printReachableMatrix();
+	printParentDepthMatrix();
+	TRACE("</saurabh>\n");
+
+	int count[600];
+	for(int i = 0; i < 600; i++)
+		count[i] = 0;
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(depth[i][j] != POS_INF)
+				count[depth[i][j]]++;
+	
+	
+	int compo = 0;
+	while(count[trap_threshold + 1] >= count[trap_threshold])
+		trap_threshold++;
+	TRACE("Trap calc done, threshold = %d\n", trap_threshold);
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(depth[i][j] > trap_threshold)
+				trap[i][j] = true;
+		
+	
+	printTrapMatrix();
+	
+}
+
 static inline void initGame(){
     scanf(" %d\n",&nrounds);
     readMap();
@@ -51,6 +232,7 @@ static inline void initGame(){
     }
     currTurn = -1;
 
+	findTraps();
 }
 
 static inline void act(Action act){

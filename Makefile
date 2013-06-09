@@ -1,14 +1,14 @@
 
 SRCS=$(wildcard ./*.cpp)
 OBJS=$(SRCS:.cpp=.o)
-CXXFLAGS=-Wall -Wextra -O
+CXXFLAGS=-lrt -pthread -O
 
 DEPENDFILE=Makefile.depend
 
 all : bistromathics
 
 bistromathics : $(OBJS)
-	g++ $(CXXFLAGS) $^ -lpthread -o $@
+	g++ $(CXXFLAGS) $^ -lpthread -lrt -o $@
 
 clean :
 	rm -f *.o bistromathics

@@ -22,7 +22,7 @@ void *watchdogRoutine(void *){
         else{
             diff = (1000*1000*(stop.tv_sec-start.tv_sec) + stop.tv_nsec) - start.tv_nsec;
         }
-        INFO("NANO: %ld\n",diff);
+        //INFO("NANO: %ld\n",diff);
     }
     return NULL;
 }

@@ -153,8 +153,14 @@ void scoreSurvival(int *score){
         for(int i=NONE;i<7;i++){
             //the positive score condition makes sure that we can actually
             //do that action
-            if(score[i]>0 && isTrap(static_cast<Action>(i)))
+			pair<int,int> next = simulateAction(static_cast<Action>(i), currLoc);
+			pair<int,int> next2 = simulateAction(NONE, next); //to account for falling
+
+			if(score[i]>0 && (isTrap(static_cast<Action>(i)) || (trap[next.first][next.second])))
                 score[i]-=200;//really bad, but not instant death,
+			if(trap[next.first][next.second] || trap[next2.first][next2.second])
+				score[i]-=300;
+            
         }
         //make sure not to walk into spawning enemies
         for(int i=0;i<nenemies;i++){

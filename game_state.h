@@ -76,7 +76,7 @@ extern EnemyInfo enemies[16*25];
 
 //returns '\0' if it's off the map
 static inline char checkMapSafe(int r, int c){
-    if(r>=0 && r<15 && c>=0 && c<25)
+    if(r>=0 && r<16 && c>=0 && c<25)
         return map[r][c];
     return '\0';
 }

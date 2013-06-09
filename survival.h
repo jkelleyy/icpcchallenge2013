@@ -8,6 +8,6 @@ using namespace std;
 
 void scoreSurvival(int *scores);
 
-pair<int,Action> computeChaseState(int enemyId);
+pair<int,ChaseInfo> computeChaseState(int enemyId);
 
 #endif

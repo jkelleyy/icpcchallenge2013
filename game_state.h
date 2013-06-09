@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <string>
+#include <list>
 
 using namespace std;
 
@@ -55,9 +56,19 @@ static const char* chaseStateNames[] = {
 };
 
 //find a better place for these...
-#define RED 0
-#define BLUE 1
-#define NOONE -1
+enum Player{
+    NOONE = -1,RED=0,BLUE=1
+};
+
+enum Action{
+    NONE=0,LEFT,RIGHT,DIG_LEFT,DIG_RIGHT,TOP,BOTTOM
+};
+
+struct ChaseInfo{
+    int pathLength;
+    Action startDir;
+    Action attackDir;
+};
 
 
 struct EnemyInfo{
@@ -65,11 +76,15 @@ struct EnemyInfo{
     pair<int,int> spawn;
     int spawnDelay;//same comment as for enemySpawnDelay
     string program;
-    int master;
+    Player master;
     bool isTrapped;
+    Action lastMove;
     int distSq;
     int distSqToOpponent;
     ChaseState chaseState;
+    ChaseInfo chaseInfo;
+    list<Action> chaseStack;
+    int patrolIndex;
 };
 extern EnemyInfo enemies[16*25];
 
@@ -111,9 +126,24 @@ static inline int distSq(const pair<int,int>& a, const pair<int,int>& b){
     return (b.first-a.first)*(b.first-a.first)+(b.second-a.second)*(b.second-a.second);
 }
 
-enum Action{
-    NONE=0,LEFT,RIGHT,DIG_LEFT,DIG_RIGHT,TOP,BOTTOM
-};
+static inline Action reverseAction(Action a){
+    switch(a){
+    case NONE:
+        return NONE;
+    case LEFT:
+        return RIGHT;
+    case RIGHT:
+        return LEFT;
+    case DIG_LEFT:
+        return DIG_RIGHT;
+    case DIG_RIGHT:
+        return DIG_LEFT;
+    case TOP:
+        return BOTTOM;
+    case BOTTOM:
+        return TOP;
+    }
+}
 
 struct state
 {

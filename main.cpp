@@ -237,7 +237,7 @@ static inline void initGame(){
         scanf(" %d %d %s",&enemies[i].loc.first,&enemies[i].loc.second,tempBuffer);
         enemies[i].spawn = enemies[i].loc;
         enemies[i].program = string(tempBuffer);
-        enemies[i].master = -1;
+        enemies[i].master = NOONE;
         enemies[i].isTrapped = false;
         enemies[i].spawnDelay = 0;
         enemies[i].distSq = distSq(enemies[i].loc,currLoc);
@@ -256,10 +256,32 @@ static inline void act(Action act){
     fflush(stdout);//don't remove this!
 }
 
-
 //process the input for one of the enemies
-static void processEnemy(int i){
-    scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&enemies[i].master);
+static void processEnemy1(int i){
+    pair<int,int> oldLoc = enemies[i].loc;
+    int master;
+    scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&master);
+    enemies[i].master = static_cast<Player>(master);
+    if(enemies[i].loc.first!=-1 && oldLoc.first!=-1 && oldLoc!=enemies[i].loc){
+        if(enemies[i].loc.first<oldLoc.first){
+            enemies[i].lastMove = TOP;
+        }
+        else if (enemies[i].loc.first>oldLoc.first){
+            if(isSupported(oldLoc))
+                enemies[i].lastMove = BOTTOM;
+            else
+                enemies[i].lastMove = NONE;
+        }
+        else if(enemies[i].loc.second<oldLoc.second){
+            enemies[i].lastMove = LEFT;
+        }
+        else{
+            enemies[i].lastMove = RIGHT;
+        }
+    }
+    else{
+        enemies[i].lastMove = NONE;
+    }
     if(enemies[i].loc.first!=-1 && (map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK || map[enemies[i].loc.first][enemies[i].loc.second]==FILLED_BRICK)){
         map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
         enemies[i].isTrapped = true;
@@ -267,6 +289,9 @@ static void processEnemy(int i){
     else{
         enemies[i].isTrapped = false;
     }
+
+}
+static void processEnemy2(int i){
     if(enemies[i].loc.first==-1){
         enemies[i].distSq = -1;
         enemies[i].distSqToOpponent = -1;
@@ -279,6 +304,7 @@ static void processEnemy(int i){
                 enemies[i].spawnDelay = 1;
         }
         enemies[i].chaseState = PATROL;
+        enemies[i].patrolIndex = 0;
     }
     else{
         enemies[i].spawnDelay=0;
@@ -290,7 +316,9 @@ static void processEnemy(int i){
             enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
         else
             enemies[i].distSqToOpponent = -1;
-        switch(computeChaseState(i).first){
+        pair<int,ChaseInfo> info = computeChaseState(i);
+        enemies[i].chaseInfo = info.second;
+        switch(info.first){
         case RED:
             enemies[i].chaseState = CHASE_RED;
             break;
@@ -299,13 +327,17 @@ static void processEnemy(int i){
             break;
         case NOONE:
             //TODO deal with return to patrol
-            if(enemies[i].chaseState == CHASE_RED ||
-               enemies[i].chaseState == CHASE_BLUE){
-                enemies[i].chaseState = UNKNOWN;
-            }
-            break;
-        }
+            switch(enemies[i].chaseState){
+            case CHASE_RED:
+            case CHASE_BLUE:
+                enemies[i].chaseState = RETURN_TO_PATROL;
+                break;
+            case RETURN_TO_PATROL:
 
+                break;
+            }
+
+        }
     }
 }
 
@@ -336,9 +368,14 @@ static bool doTurn(){
     else{
         enemySpawnDelay = 0;
     }
+    //these two loops MUST be separate, the second depends on the first finishing
     for(int i=0;i<nenemies;i++){
-        processEnemy(i);
+        processEnemy1(i);
     }
+    for(int i=0;i<nenemies;i++){
+        processEnemy2(i);
+    }
+
     for(int i=0;i<16;i++){
         TRACE("MAP: %s\n",&map[i][0]);
     }

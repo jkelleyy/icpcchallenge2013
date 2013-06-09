@@ -25,5 +25,6 @@ using namespace std;
 
 //stuff that should probably go elsewhere
 #define NEG_INF -100000000
+#define POS_INF 100000000
 
 #endif

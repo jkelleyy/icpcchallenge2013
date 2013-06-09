@@ -20,6 +20,13 @@ extern int nenemies;
 extern int currTurn;
 extern int missedTurns;
 extern char map[16][26];
+
+extern int component[16][26];
+extern bool reachable[16][26];
+extern int depth[16][26];
+extern pair<int,int> earliest_parent[16][26];
+extern int gold_collected[16][26];
+
 extern pair<int,int> currLoc;
 extern pair<int,int> ourSpawn;
 extern int currScore;
@@ -74,6 +81,10 @@ static inline bool isSolid(char c){
     return c==BRICK || c==LADDER || c==FILLED_BRICK;
 }
 
+static inline bool isBrick(const pair<int,int>& loc){
+    return map[loc.first][loc.second] == BRICK;
+}
+
 static inline bool isSupported(const pair<int,int>& loc = currLoc){
     return loc.first==15
         || isSolid(map[loc.first+1][loc.second])
@@ -110,5 +121,6 @@ static const char *actionNames[7] = {
 };
 
 bool canDoAction(Action act,const pair<int,int>& loc = currLoc);
+bool canDoAction2(Action act,const pair<int,int>& loc = currLoc);
 pair<int,int> simulateAction(Action act,const pair<int,int>& loc);
 #endif

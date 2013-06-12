@@ -82,7 +82,7 @@ static inline void printEarliestParents()
 	}
 }
 
-static inline void dfs(pair<int,int> curr, int curr_depth)
+static inline void dfs(pair<int,int> curr, int curr_comp)
 {
 	int curr_x = curr.first;
 	int curr_y = curr.second;
@@ -91,20 +91,7 @@ static inline void dfs(pair<int,int> curr, int curr_depth)
 		return;
 	
 	reachable[curr_x][curr_y] = true;
-	depth[curr_x][curr_y] = curr_depth;
-
-	if(!isSupported(curr))
-	{
-		pair<int,int> next = simulateAction(BOTTOM, curr);
-		dfs(next, curr_depth + 1);
-		pair<int,int> parent_ = earliest_parent[next.first][next.second];
-		if(depth[curr_x][curr_y] > depth[parent_.first][parent_.second])
-		{
-			depth[curr_x][curr_y] = depth[parent_.first][parent_.second];
-			earliest_parent[curr.first][curr.second] = make_pair(parent_.first, parent_.second);
-		}
-		return;
-	}
+	depth[curr_x][curr_y] = curr_comp;
 
 	int most_gold = 0;
 	for(int i = 0; i < 7; i++)
@@ -112,7 +99,7 @@ static inline void dfs(pair<int,int> curr, int curr_depth)
 		if(canDoAction2(static_cast<Action>(i), curr))
 		{
 			pair<int,int> next = simulateAction(static_cast<Action>(i), curr);
-			dfs(next, curr_depth + 1);
+			dfs(next, ++curr_comp);
 			pair<int,int> parent_ = earliest_parent[next.first][next.second];
 			if(depth[curr_x][curr_y] > depth[parent_.first][parent_.second])
 			{
@@ -136,8 +123,6 @@ static inline pair<int,int> getEarliestParents(int i, int j)
 
 static inline void findComponents()
 {
-	TRACE("findTraps checkpoint 1111\n");
-	
 	totalGoldOnMap = 0;
 	for(int i = 0; i < 16; i++)
 	{
@@ -154,6 +139,7 @@ static inline void findComponents()
 	
 	dfs(ourSpawn, 0);
 	TRACE("saurabh: dfs done");
+	printParentDepthMatrix();
 	
 	for(int i = 0; i < 16; i++)
 		for(int j = 0; j < 26; j++)
@@ -167,19 +153,13 @@ static inline void findComponents()
 	for(int i = 0; i < 16; i++)
 		for(int j = 0; j < 26; j++)
 			earliest_parent[i][j] = getEarliestParents(i, j);
-	TRACE("findTraps checkpoint 3\n");
-	printEarliestParents();
+	//printEarliestParents();
 	
 	for(int i = 0; i < 16; i++)
 		for(int j = 0; j < 26; j++)
 			depth[i][j] = depth[earliest_parent[i][j].first][earliest_parent[i][j].second];
-	
-	
-	TRACE("<saurabh>\n");
-	//printReachableMatrix();
 	printParentDepthMatrix();
-	TRACE("</saurabh>\n");
-
+	
 	int count[600];
 	for(int i = 0; i < 600; i++)
 		count[i] = 0;
@@ -221,8 +201,7 @@ static inline void findComponents()
 }
 
 static inline void initGame(){
-    TRACE("findTraps checkpoint 1111\n");
-	scanf(" %d\n",&nrounds);
+    scanf(" %d\n",&nrounds);
     readMap();
     scanf(" %d %d ",&currLoc.first,&currLoc.second);
     ourSpawn = currLoc;
@@ -246,7 +225,6 @@ static inline void initGame(){
     currTurn = -1;
     currScore = 0;
     enemyScore = 0;
-	TRACE("findTraps checkpoint 1111\n");
 	
 	findComponents();
 }

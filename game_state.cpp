@@ -58,7 +58,8 @@ bool canDoAction2(Action act,const pair<int,int>& loc){
 	if(act != BOTTOM)
 		return canDoAction(act, loc);
 
-	return (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
+	return (!isSupported(loc)) 
+		|| (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
 		|| (canDoAction(RIGHT, loc) && canDoAction(DIG_LEFT, simulateAction(RIGHT, loc)));
 
 }

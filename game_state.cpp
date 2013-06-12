@@ -98,10 +98,6 @@ bool canDoActionOpponent(Action act,const pair<int,int>& loc){
     return canDoActionRaw(act,loc);
 }
 
-static bool isSupportedEnemy(const pair<int,int>& loc){
-    return checkMapSafe(loc.first+1,loc.second)==REMOVED_BRICK || isSupported(loc);
-}
-
 bool canDoActionEnemy(Action act,const pair<int,int>& loc){
     switch(act){
     case NONE:

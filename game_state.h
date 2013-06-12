@@ -2,8 +2,8 @@
 #define BISTROMATHICS_GAME_STATE_H 1
 
 #include <utility>
-#include <string>
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -49,7 +49,7 @@ struct EnemyInfo{
     pair<int,int> loc;
     pair<int,int> spawn;
     int spawnDelay;//same comment as for enemySpawnDelay
-    string program;
+    vector<Action> program;
     Player master;
     bool isTrapped;
     Action lastMove;
@@ -59,6 +59,9 @@ struct EnemyInfo{
     ChaseInfo chaseInfo;
     list<Action> chaseStack;
     int patrolIndex;
+    inline bool isAlive(){
+        return loc.first!=-1;
+    }
 };
 
 //things that don't change
@@ -147,6 +150,10 @@ static inline bool isBrick(const pair<int,int>& loc){
 
 static inline bool isSupported(const pair<int,int>& loc = currLoc){
     return isSolid(checkMapSafe(loc.first+1,loc.second)) || map[loc.first][loc.second]==LADDER;
+}
+
+static inline bool isSupportedEnemy(const pair<int,int>& loc){
+    return checkMapSafe(loc.first+1,loc.second)==REMOVED_BRICK || isSupported(loc);
 }
 
 static inline bool isAlive(){

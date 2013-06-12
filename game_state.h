@@ -14,33 +14,6 @@ using namespace std;
 #define REMOVED_BRICK '-'
 #define FILLED_BRICK '+'
 
-//extern the global state
-//the actually declarations for all of these are in game_state.cpp
-extern int nrounds;
-extern int nenemies;
-extern int currTurn;
-extern int missedTurns;
-extern char map[16][26];
-
-extern int component[16][26];
-extern int gold_comp[600];
-extern int max_gold_comp;
-extern int totalGoldOnMap;
-extern bool reachable[16][26];
-extern int depth[16][26];
-extern pair<int,int> earliest_parent[16][26];
-
-extern pair<int,int> currLoc;
-extern pair<int,int> ourSpawn;
-extern int currScore;
-extern int brickDelay;
-extern pair<int,int> enemyLoc;
-extern pair<int,int> enemySpawn;
-extern int enemyScore;
-//if we lose some turns this could be an estimate,
-//if it's 0, then the enemy is alive
-extern int enemySpawnDelay;
-extern int enemyBrickDelay;
 enum ChaseState{
     //UNKNOWN is if we lose track and can't figure out what the enemy is doing
     //if it's dead, use PATROL
@@ -86,7 +59,64 @@ struct EnemyInfo{
     list<Action> chaseStack;
     int patrolIndex;
 };
-extern EnemyInfo enemies[16*25];
+
+//things that don't change
+class StaticWorldData{
+public:
+    int nrounds;
+    int nenemies;
+    pair<int,int> enemySpawn;
+    pair<int,int> ourSpawn;
+};
+
+extern StaticWorldData fixedData;
+
+//these things change every turn
+class World{
+public:
+    int currTurn;
+    int missedTurns;
+    char map[16][26];
+    pair<int,int> currLoc;
+    int currScore;
+    int brickDelay;
+    pair<int,int> enemyLoc;
+    int enemyScore;
+    int enemySpawnDelay;
+    int enemyBrickDelay;
+    EnemyInfo enemies[16*25];
+};
+
+extern World game;
+
+//extern the global state
+//the actually declarations for all of these are in game_state.cpp
+static int& nrounds = fixedData.nrounds;
+static int& nenemies = fixedData.nenemies;
+static int& currTurn = game.currTurn;
+static int& missedTurns = game.missedTurns;
+static char (&map)[16][26] = game.map;
+
+extern int component[16][26];
+extern int gold_comp[600];
+extern int max_gold_comp;
+extern int totalGoldOnMap;
+extern bool reachable[16][26];
+extern int depth[16][26];
+extern pair<int,int> earliest_parent[16][26];
+
+static pair<int,int>& currLoc = game.currLoc;
+static pair<int,int>& ourSpawn = fixedData.ourSpawn;
+static int& currScore = game.currScore;
+static int& brickDelay = game.brickDelay;
+static pair<int,int>& enemyLoc = game.enemyLoc;
+static pair<int,int>& enemySpawn = fixedData.enemySpawn;
+static int& enemyScore = game.enemyScore;
+//if we lose some turns this could be an estimate,
+//if it's 0, then the enemy is alive
+static int& enemySpawnDelay = game.enemySpawnDelay;
+static int& enemyBrickDelay = game.enemyBrickDelay;
+static EnemyInfo (&enemies)[16*25] = game.enemies;
 
 
 //returns '\0' if it's off the map

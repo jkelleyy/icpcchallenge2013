@@ -1,13 +1,8 @@
 #include "game_state.h"
 #include "util.h"
 
-int nrounds;
-int nenemies;
-int currTurn;
-int missedTurns;
-//row column
-//the extra +1 is for a null terminator, it makes reading in the data easier
-char map[16][25+1];
+StaticWorldData fixedData;
+World game;
 
 bool reachable[16][26];
 int depth[16][26];
@@ -16,18 +11,6 @@ int gold_comp[600];
 int totalGoldOnMap;
 int max_gold_comp;
 int component[16][26];
-
-pair<int,int> currLoc;
-pair<int,int> ourSpawn;
-int currScore;
-int brickDelay;
-pair<int,int> enemyLoc;
-pair<int,int> enemySpawn;
-int enemyScore;
-int enemySpawnDelay;
-int enemyBrickDelay;
-//we can't have more enemies than grid squares!
-EnemyInfo enemies [16*25];
 
 pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())

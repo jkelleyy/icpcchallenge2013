@@ -75,15 +75,13 @@ bool canDoActionRaw(Action act, const pair<int,int>& loc){
         return isSupported(loc)
             && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case DIG_LEFT:
-        return brickDelay==0
-            && isSupported(loc)
+        return isSupported(loc)
             && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
             && checkMapSafe(loc.first+1,loc.second-1)==BRICK
             && checkMapSafe(loc.first,loc.second-1)!=BRICK
             && checkMapSafe(loc.first,loc.second-1)!=LADDER;
     case DIG_RIGHT:
-        return brickDelay==0
-            && isSupported(loc)
+        return isSupported(loc)
             && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
             && checkMapSafe(loc.first+1,loc.second+1)==BRICK
             && checkMapSafe(loc.first,loc.second+1)!=BRICK
@@ -104,11 +102,15 @@ bool canDoActionRaw(Action act, const pair<int,int>& loc){
 bool canDoActionPlayer(Action act,const pair<int,int>& loc){
     if(!isAlive() && act!=NONE)
         return false;
+    if((act==DIG_LEFT || act==DIG_RIGHT) && brickDelay!=0)
+        return false;
     return canDoActionRaw(act,loc);
 }
 
 bool canDoActionOpponent(Action act,const pair<int,int>& loc){
     if(enemyLoc.first!=-1 && act!=NONE)
+        return false;
+    if((act==DIG_LEFT || act==DIG_RIGHT) && enemyBrickDelay!=0)
         return false;
     return canDoActionRaw(act,loc);
 }
@@ -128,19 +130,8 @@ bool canDoActionEnemy(Action act,const pair<int,int>& loc){
         return isSupportedEnemy(loc)
             && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case DIG_LEFT:
-        return brickDelay==0
-            && isSupportedEnemy(loc)
-            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
-            && checkMapSafe(loc.first+1,loc.second-1)==BRICK
-            && checkMapSafe(loc.first,loc.second-1)!=BRICK
-            && checkMapSafe(loc.first,loc.second-1)!=LADDER;
     case DIG_RIGHT:
-        return brickDelay==0
-            && isSupportedEnemy(loc)
-            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
-            && checkMapSafe(loc.first+1,loc.second+1)==BRICK
-            && checkMapSafe(loc.first,loc.second+1)!=BRICK
-            && checkMapSafe(loc.first,loc.second+1)!=LADDER;
+        return false;
     case TOP:
         return loc.first>0
             && isSupportedEnemy(loc)//can't move while falling

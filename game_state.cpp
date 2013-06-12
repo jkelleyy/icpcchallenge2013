@@ -9,7 +9,7 @@ int missedTurns;
 //the extra +1 is for a null terminator, it makes reading in the data easier
 char map[16][25+1];
 
-bool reachable[16][26];
+bool reachable[16][26][16][26];
 int depth[16][26];
 pair<int,int> earliest_parent[16][26];
 int gold_comp[600];
@@ -28,7 +28,7 @@ int enemySpawnDelay;
 int enemyBrickDelay;
 //we can't have more enemies than grid squares!
 EnemyInfo enemies [16*25];
-
+    
 pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())
 		return make_pair<int,int>(-1,-1);

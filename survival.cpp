@@ -78,6 +78,29 @@ static bool isActionReversible(Action a, pair<int,int> loc){
     return canDoActionEnemy(reverseAction(a),loc);
 }
 
+int goldInCurrComponent(pair<int,int> loc)
+{
+	int comp = component[loc.first][loc.second];
+
+	int gold = 0;
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(component[i][j] == comp)
+				if(map[i][j] == GOLD)
+					gold++;
+	return gold;
+}
+
+bool isSuicidal(Action action, pair<int,int> loc)
+{
+	pair<int,int> next = simulateAction(action, loc);
+	while(next.first<15 && !isSolid(map[next.first+1][next.second]))
+		next.first++;
+	if(map[next.first][next.second] == REMOVED_BRICK)
+		return true;
+	return false;
+}
+
 //figure out who an enemy is chasing
 //and which direction it will chase in
 pair<int,ChaseInfo> computeChaseState(int enemyId){
@@ -253,51 +276,12 @@ void scoreSurvival(int *score){
     }
     if(isAlive()){
         for(int i=NONE;i<7;i++){
-            //the positive score condition makes sure that we can actually
-            //do that action
-			/*
-			pair<int,int> next = simulateAction(static_cast<Action>(i), currLoc);
-			pair<int,int> next2 = simulateAction(NONE, next); //to account for falling
-			
-			//TODO: fix below code, shouldn't need >= 0 below it.
-			for(int ii = 0; ii < 20; ii++)
-			{
-				next2 = simulateAction(NONE, next2); //to account for falling
-			}
-			
-			if((next2.first >= 0) && (next2.second>= 0))
-			{
-				int oldComponent = component[currLoc.first][currLoc.second];
-				int newComponent = component[next2.first][next2.second];
-			
-				bool shouldChangeComponent = true;
-				if((oldComponent >= 0) && (newComponent >= 0) && (oldComponent != newComponent))
-				{
-					shouldChangeComponent = false;
-					if(oldComponent < max_gold_comp)
-						shouldChangeComponent = true;
-					if(gold_comp[newComponent] >= gold_comp[oldComponent])
-						shouldChangeComponent = true;
-					if(gold_comp[newComponent] >= totalGoldOnMap / 2)
-						shouldChangeComponent = true;
-				}
-            
-				if(shouldChangeComponent)
-				{
-					TRACE("compo: changing from %d to %d\n", oldComponent, newComponent);
-				}
-				else
-				{
-					//score[i] -= 1000;
-					TRACE("compo: avoiding changing from %d to %d\n", oldComponent, newComponent);
-				}
-			}
-			*/
-			if(score[i]>0 && isTrap(static_cast<Action>(i)))
+			if((goldInCurrComponent(currLoc) == 0) && (gold_comp[component[currLoc.first][currLoc.second]] < (totalGoldOnMap / 2)))
+				if(isSuicidal(static_cast<Action>(i), currLoc))
+					score[i] += 1000;
+            if(score[i]>0 && isTrap(static_cast<Action>(i)))
 				score[i]-=200;//really bad, but not instant death,
-			
-			
-        }
+		}
         //make sure not to walk into spawning enemies
         for(int i=0;i<nenemies;i++){
             if(enemies[i].spawnDelay==1){

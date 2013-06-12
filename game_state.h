@@ -26,7 +26,7 @@ extern int component[16][26];
 extern int gold_comp[600];
 extern int max_gold_comp;
 extern int totalGoldOnMap;
-extern bool reachable[16][26];
+extern bool reachable[16][26][16][26];
 extern int depth[16][26];
 extern pair<int,int> earliest_parent[16][26];
 

@@ -26,14 +26,14 @@ static inline void readMap(){
 
 static char tempBuffer[1000];
 
-static inline void printReachableMatrix()
+static inline void printReachableMatrix(int starti, int startj)
 {
 	TRACE("Reachable matrix:\n");
 	for(int i = 0; i < 16; i++)
 	{
 		TRACE("reachable ");
 		for(int j = 0; j < 26; j++)
-			if(reachable[i][j])
+			if(reachable[starti][startj][i][j])
 				TRACE("1 ");
 			else
 				TRACE("0 ");
@@ -53,151 +53,77 @@ static inline void printComponentMatrix()
 	}
 }
 
-static inline void printParentDepthMatrix()
+static inline void dfs(pair<int,int> start, pair<int,int> curr)
 {
-	TRACE("Depth matrix:\n");
-	for(int i = 0; i < 16; i++)
-	{
-		TRACE("depth_matrix ");
-		for(int j = 0; j < 26; j++)
-		{
-			if(depth[i][j] == POS_INF)
-				TRACE(" - ");
-			else
-				TRACE("%2d ", depth[i][j]);
-		}
-		TRACE("\n");
-	}
-}
-
-static inline void printEarliestParents()
-{
-	TRACE("Earliest Parent matrix:\n");
-	for(int i = 0; i < 16; i++)
-	{
-		TRACE("earliest_parent ");
-		for(int j = 0; j < 26; j++)
-			TRACE("%2d,%2d ", earliest_parent[i][j].first, earliest_parent[i][j].second);
-		TRACE("\n");
-	}
-}
-
-static inline void dfs(pair<int,int> curr, int curr_comp)
-{
-	int curr_x = curr.first;
-	int curr_y = curr.second;
-
-	if(reachable[curr_x][curr_y])
+	if(reachable[start.first][start.second][curr.first][curr.second])
 		return;
+	reachable[start.first][start.second][curr.first][curr.second] = true;
 	
-	reachable[curr_x][curr_y] = true;
-	depth[curr_x][curr_y] = curr_comp;
-
-	int most_gold = 0;
 	for(int i = 0; i < 7; i++)
-	{
 		if(canDoAction2(static_cast<Action>(i), curr))
-		{
-			pair<int,int> next = simulateAction(static_cast<Action>(i), curr);
-			dfs(next, ++curr_comp);
-			pair<int,int> parent_ = earliest_parent[next.first][next.second];
-			if(depth[curr_x][curr_y] > depth[parent_.first][parent_.second])
-			{
-				depth[curr_x][curr_y] = depth[parent_.first][parent_.second];
-				earliest_parent[curr.first][curr.second] = make_pair(parent_.first, parent_.second);
-			}
-		}
-	}
-
+			dfs(start, simulateAction(static_cast<Action>(i), curr));
+	
 	return;
 }
 
-static inline pair<int,int> getEarliestParents(int i, int j)
+static inline void computeAllWayReachability()
 {
-	if((earliest_parent[i][j].first == i) && (earliest_parent[i][j].second == j))
-		return earliest_parent[i][j]; //make_pair(i, j);
-	earliest_parent[i][j] = getEarliestParents(earliest_parent[i][j].first, earliest_parent[i][j].second);
-
-	return earliest_parent[i][j];
-}
-
-static inline void findComponents()
-{
-	totalGoldOnMap = 0;
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			for(int ii = 0; ii < 16; ii++)
+				for(int jj = 0; jj < 26; jj++)
+					reachable[i][j][ii][jj] = false;
+	
 	for(int i = 0; i < 16; i++)
 	{
 		for(int j = 0; j < 26; j++)
 		{
-			reachable[i][j] = false;
-			component[i][j] = -1;
-			depth[i][j] = POS_INF;
-			earliest_parent[i][j] = make_pair(i, j);
-			if(map[i][j] == GOLD)
-				totalGoldOnMap++;
+			pair<int,int> start = make_pair(i, j);
+			dfs(start, start);
 		}
 	}
-	
-	dfs(ourSpawn, 0);
-	TRACE("saurabh: dfs done");
-	printParentDepthMatrix();
-	
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			earliest_parent[i][j] = getEarliestParents(i, j);
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			earliest_parent[i][j] = getEarliestParents(i, j);
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			earliest_parent[i][j] = getEarliestParents(i, j);
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			earliest_parent[i][j] = getEarliestParents(i, j);
-	//printEarliestParents();
-	
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			depth[i][j] = depth[earliest_parent[i][j].first][earliest_parent[i][j].second];
-	printParentDepthMatrix();
-	
-	int count[600];
-	for(int i = 0; i < 600; i++)
-		count[i] = 0;
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			if(depth[i][j] != POS_INF)
-				count[depth[i][j]]++;
-	
-	int compo = -1;
-	int temp_map[600];
-	for(int i = 0; i < 600; i++)
-	{
-		if(count[i] > 1)
-			compo++;
-		temp_map[i] = compo;
-	}
-	
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			if(depth[i][j] != POS_INF)
-				component[i][j] = temp_map[depth[i][j]];
-			else
-				component[i][j] = -1;
-	TRACE("component calc done\n");
-	
-	printComponentMatrix();
+}
 
+static inline void assignComponents()
+{
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			component[i][j] = -1;
+
+	int comp = 0;
+	for(int i = 0; i < 16; i++)
+	{
+		for(int j = 0; j < 26; j++)
+		{
+			if(component[i][j] == -1)
+				component[i][j] = comp++;
+			for(int ii = 0; ii < 16; ii++)
+				for(int jj = 0; jj < 26; jj++)
+					if((reachable[i][j][ii][jj]) && (reachable[ii][jj][i][j]))
+						component[ii][jj] = component[i][j];
+		}
+	}
+}
+
+static inline void findGoldInComponents()
+{
 	for(int i = 0; i < 600; i++)
 		gold_comp[i] = 0;
 
 	for(int i = 0; i < 16; i++)
 		for(int j = 0; j < 26; j++)
+			if(component[i][j] != -1)
+				if(map[i][j] == GOLD)
+					gold_comp[component[i][j]]++;
+}
+
+static inline void findTotalGoldInMap()
+{
+	totalGoldOnMap = 0;
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
 			if(map[i][j] == GOLD)
-				gold_comp[component[i][j]]++;
-	
-	for(int i = 0; i < 600; i++)
-		if(gold_comp[i] > gold_comp[max_gold_comp])
-			max_gold_comp = i;
+				totalGoldOnMap++;
 }
 
 static inline void initGame(){
@@ -225,8 +151,16 @@ static inline void initGame(){
     currTurn = -1;
     currScore = 0;
     enemyScore = 0;
-	
-	findComponents();
+	computeAllWayReachability();
+	assignComponents();
+	findTotalGoldInMap();
+	findGoldInComponents();
+	printComponentMatrix();
+
+	TRACE("Total gold = %d\n", totalGoldOnMap);
+	for(int i = 0; i < 85; i++)
+		if(gold_comp[i] > 1)
+			TRACE("Gold in %d = %d\n", i, gold_comp[i]);
 }
 
 static inline void act(Action act){

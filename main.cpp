@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <cassert>
 
 using namespace std;
 
@@ -236,7 +237,23 @@ static inline void initGame(){
         //todo, find a better way of dealing with the program.
         scanf(" %d %d %s",&enemies[i].loc.first,&enemies[i].loc.second,tempBuffer);
         enemies[i].spawn = enemies[i].loc;
-        enemies[i].program = string(tempBuffer);
+        enemies[i].program.resize(strlen(tempBuffer));
+        for(int j=0;j<enemies[i].program.size();j++){
+            switch(tempBuffer[j]){
+            case 'R':
+                enemies[i].program[j] = RIGHT;
+                break;
+            case 'L':
+                enemies[i].program[j] = LEFT;
+                break;
+            case 'T':
+                enemies[i].program[j] = TOP;
+                break;
+            case 'B':
+                enemies[i].program[j] = BOTTOM;
+                break;
+            }
+        }
         enemies[i].master = NOONE;
         enemies[i].isTrapped = false;
         enemies[i].spawnDelay = 0;
@@ -318,6 +335,28 @@ static void processEnemy2(int i){
             enemies[i].distSqToOpponent = -1;
         pair<int,ChaseInfo> info = computeChaseState(i);
         enemies[i].chaseInfo = info.second;
+        switch(enemies[i].chaseState){
+        case CHASE_BLUE:
+        case CHASE_RED:
+            if(enemies[i].lastMove!=NONE)
+                enemies[i].chaseStack.push_front(enemies[i].lastMove);
+            break;
+        case PATROL:
+            if(enemies[i].lastMove!=NONE){
+                enemies[i].patrolIndex++;
+                enemies[i].patrolIndex %= enemies[i].program.size();
+            }
+            break;
+        case RETURN_TO_PATROL:
+            //assert(!enemies[i].chaseStack.empty());
+            if(enemies[i].lastMove!=NONE)
+                enemies[i].chaseStack.pop_front();
+            if(enemies[i].chaseStack.empty())
+                enemies[i].chaseState = PATROL;
+
+            break;
+        }
+
         switch(info.first){
         case RED:
             enemies[i].chaseState = CHASE_RED;
@@ -326,14 +365,13 @@ static void processEnemy2(int i){
             enemies[i].chaseState = CHASE_BLUE;
             break;
         case NOONE:
-            //TODO deal with return to patrol
             switch(enemies[i].chaseState){
             case CHASE_RED:
             case CHASE_BLUE:
-                enemies[i].chaseState = RETURN_TO_PATROL;
-                break;
-            case RETURN_TO_PATROL:
-
+                if(enemies[i].chaseStack.empty())
+                    enemies[i].chaseState = PATROL;
+                else
+                    enemies[i].chaseState = RETURN_TO_PATROL;
                 break;
             }
 

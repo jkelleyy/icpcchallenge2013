@@ -4,8 +4,102 @@
 #include <queue>
 #include <set>
 #include <utility>
+#include <cassert>
 
 using namespace std;
+
+//copy over only the data relevant to prediction
+void copyPredictionData(EnemyInfo& dest, const EnemyInfo& src){
+    dest.loc = src.loc;
+    dest.spawnDelay = src.spawnDelay;
+    dest.isTrapped = src.isTrapped;
+    dest.chaseState = src.chaseState;
+    dest.chaseInfo = src.chaseInfo;
+    dest.chaseStack = src.chaseStack;
+    dest.patrolIndex = src.patrolIndex;
+    dest.lastMove = src.lastMove;
+}
+
+//note this is very specialized
+//returns NEG_INF on certain death, otherwise it returns a safety score
+//with 0 being safe, and negative scores being different levels of unsafeness
+int predictFall(pair<int,int> nextLoc){
+    TRACE("BEGIN PREDICTION\n");
+    EnemyInfo predictedEnemies[nenemies];
+    for(int i=0;i<nenemies;i++)
+        copyPredictionData(predictedEnemies[i],enemies[i]);
+    bool first = true;
+    while(!isSupported(nextLoc)){
+        if(!first)
+            nextLoc.first++;
+        for(int i=0;i<nenemies;i++){
+            if(predictedEnemies[i].isTrapped)
+                continue;
+            if(predictedEnemies[i].spawnDelay==0 &&
+               !predictedEnemies[i].isAlive()){
+                predictedEnemies[i].loc = enemies[i].spawn;
+            }
+            if(predictedEnemies[i].spawnDelay!=0){
+                predictedEnemies[i].spawnDelay--;
+            }
+            else if(!isSupportedEnemy(predictedEnemies[i].loc)){
+                predictedEnemies[i].loc.first++;
+            }
+            else if(predictedEnemies[i].lastMove!=NONE){
+                predictedEnemies[i].lastMove = NONE;
+                if(predictedEnemies[i].chaseState==CHASE_RED){
+                    if(predictedEnemies[i].chaseStack.empty())
+                        predictedEnemies[i].chaseState = PATROL;
+                    else
+                        predictedEnemies[i].chaseState = RETURN_TO_PATROL;
+                }
+            }
+            else{
+                switch(predictedEnemies[i].chaseState){
+
+                case CHASE_BLUE:
+                    //let's just ignore these for now
+                    break;
+                case CHASE_RED:{
+                    //assert(first);
+                    Action move = predictedEnemies[i].chaseInfo.startDir;
+                    predictedEnemies[i].loc = simulateAction(move,predictedEnemies[i].loc);
+                    predictedEnemies[i].chaseStack.push_front(move);
+                    predictedEnemies[i].chaseState = RETURN_TO_PATROL;
+                    predictedEnemies[i].lastMove = move;
+                }
+                case RETURN_TO_PATROL:{
+                    Action move = predictedEnemies[i].chaseStack.front();
+                    predictedEnemies[i].chaseStack.pop_front();
+                    move = reverseAction(move);
+                    predictedEnemies[i].loc = simulateAction(move,predictedEnemies[i].loc);
+                    predictedEnemies[i].lastMove = move;
+                    if(predictedEnemies[i].chaseStack.empty())
+                        predictedEnemies[i].chaseState = PATROL;
+                    break;
+                }
+                case PATROL:{
+                    Action move = enemies[i].program[predictedEnemies[i].patrolIndex];
+                    predictedEnemies[i].patrolIndex++;
+                    predictedEnemies[i].patrolIndex%=enemies[i].program.size();
+                    predictedEnemies[i].loc = simulateAction(move,predictedEnemies[i].loc);
+                    predictedEnemies[i].lastMove = move;
+                    break;
+                }
+                case UNKNOWN:
+                    break;//can't really do much in this case...
+                }
+            }
+            TRACE("PREDICT: %d -> %d %d\n",i,predictedEnemies[i].loc.first,predictedEnemies[i].loc.second);
+            if(predictedEnemies[i].loc==nextLoc)
+                return NEG_INF;//death!
+        }
+        first = false;
+        TRACE("PREDICTION: us -> %d %d\n",nextLoc.first,nextLoc.second);
+
+    }
+    return 0;
+}
 
 static bool isSafeFall(pair<int,int> loc){
     while(loc.first<15 && !isSolid(map[loc.first+1][loc.second])){
@@ -295,8 +389,11 @@ void scoreSurvival(int *score){
 			*/
 			if(score[i]>0 && isTrap(static_cast<Action>(i)))
 				score[i]-=200;//really bad, but not instant death,
-			
-			
+            pair<int,int> newLoc = simulateAction(static_cast<Action>(i),currLoc);
+            if(score[i]>=0){
+                score[i]+=predictFall(newLoc);
+            }
+
         }
         //make sure not to walk into spawning enemies
         for(int i=0;i<nenemies;i++){

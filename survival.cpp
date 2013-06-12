@@ -49,7 +49,7 @@ static bool isTrap(Action dir){
     return !isSafeFall(loc);
 }
 
-struct info{
+struct Info{
     pair<int,int> loc;
     ChaseInfo info;
 };
@@ -82,8 +82,8 @@ static bool isActionReversible(Action a, pair<int,int> loc){
 //and which direction it will chase in
 pair<int,ChaseInfo> computeChaseState(int enemyId){
     set<pair<int,int> >seen;
-    queue<info> locs;
-    info start;
+    queue<Info> locs;
+    Info start;
     start.loc = enemies[enemyId].loc;
     start.info.pathLength = 0;
     start.info.startDir = NONE;
@@ -94,7 +94,7 @@ pair<int,ChaseInfo> computeChaseState(int enemyId){
     seen.insert(start.loc);
     locs.push(start);
     while(!locs.empty()){
-        info curr = locs.front();
+        Info curr = locs.front();
         locs.pop();
         if((enemies[enemyId].master==NOONE && curr.info.pathLength>5) || curr.info.pathLength>8){
             return make_pair(NOONE,start.info);
@@ -159,7 +159,7 @@ pair<int,ChaseInfo> computeChaseState(int enemyId){
 #define DO_BRANCH(dir)                                                  \
             if(canDoActionEnemy(dir,curr.loc) &&                        \
                isActionReversible(dir,curr.loc)){                       \
-                info next;                                              \
+                Info next;                                              \
                 next.info.pathLength = curr.info.pathLength+1;          \
                 switch(dir){                                            \
                 case LEFT:                                              \

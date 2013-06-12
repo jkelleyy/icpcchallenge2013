@@ -1,6 +1,7 @@
 
 #include "util.h"
 #include "game_state.h"
+#include "points.h"
 #include "survival.h"
 #include "points.h"
 #include <string>
@@ -389,7 +390,8 @@ static bool doTurn(){
 
     //TODO add points score
 
-    state s = pointsScore();
+    vector<state> states = pointsScore(5,nextTurn);
+    state s = states[states.size()-1];
     TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
     if(s.first!=NONE)
         survivalScore[s.first]+=50;

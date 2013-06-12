@@ -145,12 +145,6 @@ static inline Action reverseAction(Action a){
     }
 }
 
-struct state
-{
-	Action first;
-	pair<int,int> pos;
-	int depth;
-};
 
 static const char *actionNames[7] = {
     "NONE",

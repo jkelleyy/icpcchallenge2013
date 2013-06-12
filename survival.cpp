@@ -25,7 +25,7 @@ void copyPredictionData(EnemyInfo& dest, const EnemyInfo& src){
 //with 0 being safe, and negative scores being different levels of unsafeness
 int predictFall(pair<int,int> nextLoc){
     TRACE("BEGIN PREDICTION\n");
-    EnemyInfo predictedEnemies[nenemies];
+    EnemyInfo* predictedEnemies = new EnemyInfo[nenemies];
     for(int i=0;i<nenemies;i++)
         copyPredictionData(predictedEnemies[i],enemies[i]);
     bool first = true;
@@ -91,13 +91,16 @@ int predictFall(pair<int,int> nextLoc){
                 }
             }
             TRACE("PREDICT: %d -> %d %d\n",i,predictedEnemies[i].loc.first,predictedEnemies[i].loc.second);
-            if(predictedEnemies[i].loc==nextLoc)
+            if(predictedEnemies[i].loc==nextLoc){
+                delete[] predictedEnemies;
                 return NEG_INF;//death!
+            }
         }
         first = false;
         TRACE("PREDICTION: us -> %d %d\n",nextLoc.first,nextLoc.second);
 
     }
+    delete[] predictedEnemies;
     return 0;
 }
 

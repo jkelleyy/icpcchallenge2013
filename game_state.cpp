@@ -4,14 +4,14 @@
 StaticWorldData fixedData;
 World game;
 
-bool reachable[16][26];
+bool reachable[16][26][16][26];
 int depth[16][26];
 pair<int,int> earliest_parent[16][26];
 int gold_comp[600];
 int totalGoldOnMap;
 int max_gold_comp;
 int component[16][26];
-
+    
 pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())
 		return make_pair<int,int>(-1,-1);
@@ -41,7 +41,8 @@ bool canDoAction2(Action act,const pair<int,int>& loc){
 	if(act != BOTTOM)
 		return canDoAction(act, loc);
 
-	return (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
+	return (!isSupported(loc)) 
+		|| (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
 		|| (canDoAction(RIGHT, loc) && canDoAction(DIG_LEFT, simulateAction(RIGHT, loc)));
 
 }

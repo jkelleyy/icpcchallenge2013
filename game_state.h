@@ -14,6 +14,7 @@ using namespace std;
 #define REMOVED_BRICK '-'
 #define FILLED_BRICK '+'
 
+
 enum ChaseState{
     //UNKNOWN is if we lose track and can't figure out what the enemy is doing
     //if it's dead, use PATROL
@@ -104,7 +105,7 @@ extern int component[16][26];
 extern int gold_comp[600];
 extern int max_gold_comp;
 extern int totalGoldOnMap;
-extern bool reachable[16][26];
+extern bool reachable[16][26][16][26];
 extern int depth[16][26];
 extern pair<int,int> earliest_parent[16][26];
 

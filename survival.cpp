@@ -67,6 +67,7 @@ int predictFall(pair<int,int> nextLoc){
                     predictedEnemies[i].chaseStack.push_front(move);
                     predictedEnemies[i].chaseState = RETURN_TO_PATROL;
                     predictedEnemies[i].lastMove = move;
+                    break;
                 }
                 case RETURN_TO_PATROL:{
                     Action move = predictedEnemies[i].chaseStack.front();

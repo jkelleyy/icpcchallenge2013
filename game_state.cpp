@@ -1,34 +1,17 @@
 #include "game_state.h"
 #include "util.h"
 
-int nrounds;
-int nenemies;
-int currTurn;
-int missedTurns;
-//row column
-//the extra +1 is for a null terminator, it makes reading in the data easier
-char map[16][25+1];
+StaticWorldData fixedData;
+World game;
 
-bool reachable[16][26];
+bool reachable[16][26][16][26];
 int depth[16][26];
 pair<int,int> earliest_parent[16][26];
 int gold_comp[600];
 int totalGoldOnMap;
 int max_gold_comp;
 int component[16][26];
-
-pair<int,int> currLoc;
-pair<int,int> ourSpawn;
-int currScore;
-int brickDelay;
-pair<int,int> enemyLoc;
-pair<int,int> enemySpawn;
-int enemyScore;
-int enemySpawnDelay;
-int enemyBrickDelay;
-//we can't have more enemies than grid squares!
-EnemyInfo enemies [16*25];
-
+    
 pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())
 		return make_pair<int,int>(-1,-1);
@@ -58,7 +41,8 @@ bool canDoAction2(Action act,const pair<int,int>& loc){
 	if(act != BOTTOM)
 		return canDoAction(act, loc);
 
-	return (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
+	return (!isSupported(loc)) 
+		|| (canDoAction(LEFT, loc) && canDoAction(DIG_RIGHT, simulateAction(LEFT, loc)))
 		|| (canDoAction(RIGHT, loc) && canDoAction(DIG_LEFT, simulateAction(RIGHT, loc)));
 
 }
@@ -74,15 +58,13 @@ bool canDoActionRaw(Action act, const pair<int,int>& loc){
         return isSupported(loc)
             && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case DIG_LEFT:
-        return brickDelay==0
-            && isSupported(loc)
+        return isSupported(loc)
             && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
             && checkMapSafe(loc.first+1,loc.second-1)==BRICK
             && checkMapSafe(loc.first,loc.second-1)!=BRICK
             && checkMapSafe(loc.first,loc.second-1)!=LADDER;
     case DIG_RIGHT:
-        return brickDelay==0
-            && isSupported(loc)
+        return isSupported(loc)
             && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
             && checkMapSafe(loc.first+1,loc.second+1)==BRICK
             && checkMapSafe(loc.first,loc.second+1)!=BRICK
@@ -103,11 +85,15 @@ bool canDoActionRaw(Action act, const pair<int,int>& loc){
 bool canDoActionPlayer(Action act,const pair<int,int>& loc){
     if(!isAlive() && act!=NONE)
         return false;
+    if((act==DIG_LEFT || act==DIG_RIGHT) && brickDelay!=0)
+        return false;
     return canDoActionRaw(act,loc);
 }
 
 bool canDoActionOpponent(Action act,const pair<int,int>& loc){
     if(enemyLoc.first!=-1 && act!=NONE)
+        return false;
+    if((act==DIG_LEFT || act==DIG_RIGHT) && enemyBrickDelay!=0)
         return false;
     return canDoActionRaw(act,loc);
 }
@@ -127,19 +113,8 @@ bool canDoActionEnemy(Action act,const pair<int,int>& loc){
         return isSupportedEnemy(loc)
             && !isImpassable(checkMapSafe(loc.first,loc.second+1));
     case DIG_LEFT:
-        return brickDelay==0
-            && isSupportedEnemy(loc)
-            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
-            && checkMapSafe(loc.first+1,loc.second-1)==BRICK
-            && checkMapSafe(loc.first,loc.second-1)!=BRICK
-            && checkMapSafe(loc.first,loc.second-1)!=LADDER;
     case DIG_RIGHT:
-        return brickDelay==0
-            && isSupportedEnemy(loc)
-            && checkMapSafe(loc.first+1,loc.second)!=FILLED_BRICK
-            && checkMapSafe(loc.first+1,loc.second+1)==BRICK
-            && checkMapSafe(loc.first,loc.second+1)!=BRICK
-            && checkMapSafe(loc.first,loc.second+1)!=LADDER;
+        return false;
     case TOP:
         return loc.first>0
             && isSupportedEnemy(loc)//can't move while falling

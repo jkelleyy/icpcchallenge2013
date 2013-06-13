@@ -24,6 +24,8 @@ void copyPredictionData(EnemyInfo& dest, const EnemyInfo& src){
 //returns NEG_INF on certain death, otherwise it returns a safety score
 //with 0 being safe, and negative scores being different levels of unsafeness
 int predictFall(pair<int,int> nextLoc){
+    if(isSupported(nextLoc))
+        return 0;
     TRACE("BEGIN PREDICTION\n");
     EnemyInfo* predictedEnemies = new EnemyInfo[nenemies];
     for(int i=0;i<nenemies;i++)
@@ -106,8 +108,54 @@ int predictFall(pair<int,int> nextLoc){
         TRACE("PREDICTION: us -> %d %d\n",nextLoc.first,nextLoc.second);
 
     }
+    set<pair<int,int> > badLocs;
+    for(int i=0;i<fixedData.nenemies;i++)
+        badLocs.insert(predictedEnemies[i].loc);
     delete[] predictedEnemies;
-    return 0;
+    set<pair<int,int> > seen;
+    queue<pair<int,int> > todo;
+    todo.push(nextLoc);
+    seen.insert(nextLoc);
+    while(!todo.empty()){
+        pair<int,int> curr = todo.front();
+        todo.pop();
+
+        if(seen.size()>game.brickDelay){
+            TRACE("Oh the humanity!\n");
+            return 0;
+        }
+        if(canDoAction(LEFT,curr)){
+            pair<int,int> next = simulateAction(LEFT,curr);
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+        if(canDoAction(RIGHT,curr)){
+            pair<int,int> next = simulateAction(RIGHT,curr);
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+
+        if(canDoAction(TOP,curr)){
+            pair<int,int> next = simulateAction(TOP,curr);
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+
+        if(canDoAction(BOTTOM,curr)){
+            pair<int,int> next = simulateAction(BOTTOM,curr);
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+    }
+    return -10*(game.brickDelay-seen.size()+1);
 }
 
 static bool isSafeFall(pair<int,int> loc){

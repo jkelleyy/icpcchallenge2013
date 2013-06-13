@@ -4,6 +4,12 @@
 #include "game_state.h"
 #include <vector>
 
+struct dugCell
+{
+	pair<int,int> loc;
+	int timeDug;
+};
+
 struct state
 {
 	Action first;
@@ -11,9 +17,11 @@ struct state
 	int depth;
 	int numGold;
 	long long goldNumber;
+	int digDelay;
+	vector<dugCell> dugCells;
 };
 
 //finds the action which gets you closest to a gold
-vector<state> pointsScore(int desiredGold, int turnNo);
+vector<state> pointsScore(int desiredGold);
 
 #endif

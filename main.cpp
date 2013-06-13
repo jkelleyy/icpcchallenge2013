@@ -128,6 +128,14 @@ static inline void findTotalGoldInMap()
 				totalGoldOnMap++;
 }
 
+static inline void saveFirstMap()
+{
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			originalMap[i][j] = map[i][j];
+	
+}
+
 static inline void initGame(){
     scanf(" %d\n",&nrounds);
     readMap();
@@ -179,6 +187,7 @@ static inline void initGame(){
 	for(int i = 0; i < 85; i++)
 		if(gold_comp[i] > 1)
 			TRACE("Gold in %d = %d\n", i, gold_comp[i]);
+	saveFirstMap();
 }
 
 static inline void act(Action act){
@@ -291,6 +300,26 @@ static void processEnemy2(int i){
     }
 }
 
+static void setSquareDelays()
+{
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(originalMap[i][j]==GOLD && game.map[i][j] !=GOLD)
+			{
+				if(game.timeout[i][j]==0)
+					game.timeout[i][j]= 150;
+				else
+					game.timeout[i][j]--;
+			}
+			else if (originalMap[i][j]==BRICK && game.map[i][j]!=BRICK)
+			{
+				if(game.timeout[i][j]==0)
+					game.timeout[i][j]=25;
+				else
+					game.timeout[i][j]--;
+			}
+}
+
 //returns false when finished
 static bool doTurn(){
     int nextTurn;
@@ -303,6 +332,9 @@ static bool doTurn(){
         WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",missedTurns);
     currTurn = nextTurn;
     readMap();
+   
+	setSquareDelays();   
+    
     scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&currScore,&brickDelay);
     scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&enemyScore,&enemyBrickDelay);
     if(enemyLoc.first==-1){
@@ -339,8 +371,20 @@ static bool doTurn(){
 
     //TODO add points score
 
-    vector<state> states = pointsScore(5,nextTurn);
-    state s = states[states.size()-1];
+    vector<state> states = pointsScore(5);
+    state s= states.size()>1?states[1]:states[0];
+    TRACE("State 1 DIST: %d\n",s.depth);
+    for(int i =2; i <states.size();i++)
+    {
+	    TRACE("STATE: %d DIST %d\n",i,states[i].depth);
+	    if(states[i].depth-states[i-1].depth<=5)
+		    s = states[i];
+	    else
+		    break;
+
+    }
+    if(s.first==DIG_LEFT || s.first==DIG_RIGHT)
+	    TRACE("ORDERED TO DIG!\n");
     TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
     if(s.first!=NONE)
         survivalScore[s.first]+=50;

@@ -83,10 +83,10 @@ bool World::canDoActionRaw(Action act, const pair<int,int>& loc){
     return false;//should be unreachable
 }
 
-bool World::canDoActionPlayer(Action act,const pair<int,int>& loc){
+bool World::canDoActionPlayer(Action act,const pair<int,int>& loc, int curBrickDelay){
     if(!isAlive() && act!=NONE)
         return false;
-    if((act==DIG_LEFT || act==DIG_RIGHT) && brickDelay!=0)
+    if((act==DIG_LEFT || act==DIG_RIGHT) && curBrickDelay!=0)
         return false;
     return canDoActionRaw(act,loc);
 }

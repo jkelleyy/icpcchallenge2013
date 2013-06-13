@@ -103,7 +103,8 @@ public:
 
     bool canDoActionRaw(Action act, const pair<int,int>& loc);
     bool canDoActionPlayer(Action act){ return canDoActionPlayer(act,currLoc); }
-    bool canDoActionPlayer(Action act, const pair<int,int>& loc);
+    bool canDoActionPlayer(Action act, const pair<int,int>&loc){ return canDoActionPlayer(act,loc,brickDelay); }
+    bool canDoActionPlayer(Action act, const pair<int,int>& loc, int curBrickDelay);
     bool canDoActionOpponent(Action act, const pair<int,int>& loc);
     bool canDoActionOpponent(Action act){ return canDoActionOpponent(act,enemyLoc); }
     bool canDoActionEnemy(Action act, const pair<int,int>& loc);
@@ -137,7 +138,6 @@ static pair<int,int>& currLoc = game.currLoc;
 static pair<int,int>& ourSpawn = fixedData.ourSpawn;
 static int& currScore = game.currScore;
 static int& brickDelay = game.brickDelay;
-static int& curDigDelay = game.curDigDelay;
 static pair<int,int>& enemyLoc = game.enemyLoc;
 static pair<int,int>& enemySpawn = fixedData.enemySpawn;
 static int& enemyScore = game.enemyScore;

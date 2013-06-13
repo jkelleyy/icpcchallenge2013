@@ -44,6 +44,11 @@ int predictFall(pair<int,int> nextLoc){
             }
             else if(!isSupportedEnemy(predictedEnemies[i].loc)){
                 predictedEnemies[i].loc.first++;
+                //this is hopefully always true
+                if(predictedEnemies[i].chaseState==PATROL){
+                    predictedEnemies[i].patrolIndex++;
+                    predictedEnemies[i].patrolIndex%=enemies[i].program.size();
+                }
             }
             else if(predictedEnemies[i].lastMove!=NONE){
                 predictedEnemies[i].lastMove = NONE;
@@ -422,7 +427,23 @@ void scoreSurvival(int *score){
                 }
             }
         }
-
+        else if(enemies[i].isFalling()){
+            //don't walk into falling things...
+            //this feels like a bit of a brute force method but oh well
+            if(enemies[i].loc.first==currLoc.first-1){
+                switch(enemies[i].loc.second-currLoc.second){
+                case -1:
+                    score[LEFT] = NEG_INF;
+                case 0:
+                    score[NONE] = NEG_INF;
+                    score[DIG_LEFT] -= 10;
+                    score[DIG_RIGHT] -= 10;
+                case 1:
+                    score[RIGHT] = NEG_INF;
+                    break;
+                }
+            }
+        }
     }
     if(isAlive()){
         for(int i=NONE;i<7;i++){

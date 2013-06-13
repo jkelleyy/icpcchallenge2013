@@ -197,10 +197,9 @@ static void processEnemy1(int i){
             enemies[i].lastMove = TOP;
         }
         else if (enemies[i].loc.first>oldLoc.first){
-            if(isSupported(oldLoc))
-                enemies[i].lastMove = BOTTOM;
-            else
-                enemies[i].lastMove = NONE;
+            //even if it's falling we should interpret that as a "BOTTOM"
+            //since that's what the enemies program does
+            enemies[i].lastMove = BOTTOM;
         }
         else if(enemies[i].loc.second<oldLoc.second){
             enemies[i].lastMove = LEFT;

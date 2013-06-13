@@ -62,6 +62,7 @@ struct EnemyInfo{
     inline bool isAlive(){
         return loc.first!=-1;
     }
+    bool isFalling();
 };
 
 //things that don't change
@@ -89,6 +90,27 @@ public:
     int enemySpawnDelay;
     int enemyBrickDelay;
     EnemyInfo enemies[16*25];
+
+    inline char checkMapSafe(int r,int c){
+        if(r>=0 && r<16 && c>=0 && c<25)
+            return map[r][c];
+        return '\0';
+    }
+    inline char checkMapSafe(const pair<int,int>& loc){
+        return checkMapSafe(loc.first,loc.second);
+    }
+
+    bool canDoActionRaw(Action act, const pair<int,int>& loc);
+    bool canDoActionPlayer(Action act){ return canDoActionPlayer(act,currLoc); }
+    bool canDoActionPlayer(Action act, const pair<int,int>& loc);
+    bool canDoActionOpponent(Action act, const pair<int,int>& loc);
+    bool canDoActionOpponent(Action act){ return canDoActionOpponent(act,enemyLoc); }
+    bool canDoActionEnemy(Action act, const pair<int,int>& loc);
+
+    bool isAlive(){
+        return currLoc.first!=-1;
+    };
+
 };
 
 extern World game;
@@ -125,13 +147,11 @@ static EnemyInfo (&enemies)[16*25] = game.enemies;
 
 //returns '\0' if it's off the map
 static inline char checkMapSafe(int r, int c){
-    if(r>=0 && r<16 && c>=0 && c<25)
-        return map[r][c];
-    return '\0';
+    return game.checkMapSafe(r,c);
 }
 
 static inline char checkMapSafe(const pair<int,int>& loc){
-    return checkMapSafe(loc.first,loc.second);
+    return game.checkMapSafe(loc.first,loc.second);
 }
 
 //bunch of tiny utility functions
@@ -157,11 +177,15 @@ static inline bool isSupportedEnemy(const pair<int,int>& loc){
 }
 
 static inline bool isAlive(){
-    return currLoc.first!=-1;
+    return game.isAlive();
 }
 
 static inline int distSq(const pair<int,int>& a, const pair<int,int>& b){
     return (b.first-a.first)*(b.first-a.first)+(b.second-a.second)*(b.second-a.second);
+}
+
+inline bool EnemyInfo::isFalling(){
+    return this->isAlive() && !isSupported(loc) && !isTrapped;
 }
 
 static inline Action reverseAction(Action a){
@@ -194,10 +218,15 @@ static const char *actionNames[7] = {
     "BOTTOM"
 };
 
-bool canDoActionRaw(Action act, const pair<int,int>& loc);
-bool canDoActionPlayer(Action act, const pair<int,int>& loc = currLoc);
-bool canDoActionOpponent(Action act, const pair<int,int>& loc = enemyLoc);
-bool canDoActionEnemy(Action act, const pair<int,int>& loc);
+static inline bool canDoActionPlayer(Action act, const pair<int,int>& loc = currLoc){
+    return game.canDoActionPlayer(act,loc);
+}
+static inline bool canDoActionOpponent(Action act, const pair<int,int>& loc = enemyLoc){
+    return game.canDoActionOpponent(act,loc);
+}
+static inline bool canDoActionEnemy(Action act, const pair<int,int>& loc){
+    return game.canDoActionEnemy(act,loc);
+}
 
 //dont use this one if possible, it will be removed soon.
 static inline bool canDoAction(Action act,const pair<int,int>& loc = currLoc){

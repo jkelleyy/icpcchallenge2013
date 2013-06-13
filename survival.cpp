@@ -180,7 +180,7 @@ bool deadEndFinder(Action dir,const pair<int,int>& loc){
         seen.insert(curr);
         if(canDoAction(LEFT,curr)){
             pair<int,int> next = simulateAction(LEFT,curr);
-            if(seen.find(next)==seen.end()){
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
                 todo.push(next);
                 seen.insert(next);
             }

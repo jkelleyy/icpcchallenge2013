@@ -4,6 +4,7 @@
 StaticWorldData fixedData;
 World game;
 
+char originalMap[16][26];
 bool reachable[16][26][16][26];
 int depth[16][26];
 pair<int,int> earliest_parent[16][26];

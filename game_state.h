@@ -81,6 +81,7 @@ public:
     int currTurn;
     int missedTurns;
     char map[16][26];
+    char timeout[16][26];//Indicates how long for bricks and gold to respaun.  0= there now.
     pair<int,int> currLoc;
     int currScore;
     int brickDelay;
@@ -101,6 +102,7 @@ static int& currTurn = game.currTurn;
 static int& missedTurns = game.missedTurns;
 static char (&map)[16][26] = game.map;
 
+extern char originalMap[16][26];
 extern int component[16][26];
 extern int gold_comp[600];
 extern int max_gold_comp;
@@ -113,6 +115,7 @@ static pair<int,int>& currLoc = game.currLoc;
 static pair<int,int>& ourSpawn = fixedData.ourSpawn;
 static int& currScore = game.currScore;
 static int& brickDelay = game.brickDelay;
+static int& curDigDelay = game.curDigDelay;
 static pair<int,int>& enemyLoc = game.enemyLoc;
 static pair<int,int>& enemySpawn = fixedData.enemySpawn;
 static int& enemyScore = game.enemyScore;

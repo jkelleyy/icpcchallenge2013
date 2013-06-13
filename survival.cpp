@@ -163,6 +163,9 @@ bool deadEndFinder(Action dir,const pair<int,int>& loc){
         return false;
     if(!canDoAction(dir,loc))
         return true;
+    set<pair<int,int> > badLocs;
+    for(int i=0;i<fixedData.nenemies;i++)
+        badLocs.insert(game.enemies[i].loc);
     set<pair<int,int> > seen;
     queue<pair<int,int> > todo;
     seen.insert(loc);
@@ -184,7 +187,7 @@ bool deadEndFinder(Action dir,const pair<int,int>& loc){
         }
         if(canDoAction(RIGHT,curr)){
             pair<int,int> next = simulateAction(RIGHT,curr);
-            if(seen.find(next)==seen.end()){
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
                 todo.push(next);
                 seen.insert(next);
             }
@@ -192,7 +195,7 @@ bool deadEndFinder(Action dir,const pair<int,int>& loc){
 
         if(canDoAction(TOP,curr)){
             pair<int,int> next = simulateAction(TOP,curr);
-            if(seen.find(next)==seen.end()){
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
                 todo.push(next);
                 seen.insert(next);
             }
@@ -200,7 +203,7 @@ bool deadEndFinder(Action dir,const pair<int,int>& loc){
 
         if(canDoAction(BOTTOM,curr)){
             pair<int,int> next = simulateAction(BOTTOM,curr);
-            if(seen.find(next)==seen.end()){
+            if(seen.find(next)==seen.end() && badLocs.find(next)==badLocs.end()){
                 todo.push(next);
                 seen.insert(next);
             }
@@ -496,62 +499,18 @@ void scoreSurvival(int *score){
         //this is a bit terrible
         //TODO reduce copy paste
         if(canDoAction(DIG_LEFT)){
-            if(currLoc.first>=14 || !isSafeFall(make_pair(currLoc.first+2,currLoc.second-1))){
-
-                //search right for an outlet
-                bool hasOutlet = false;
-                pair<int,int> loc = currLoc;
-                int stepCount=0;
-                while(loc.second<25 && !isImpassable(map[loc.first][loc.second])){
-                    if(stepCount>5){
-                        hasOutlet = true;
-                        break;
-                    }
-                    if(map[loc.first][loc.second]==LADDER || map[loc.first+1][loc.second]==LADDER){
-                        hasOutlet=true;
-                        break;
-                    }
-                    if(!isSupported(loc)){
-                        if(isSafeFall(loc))
-                            hasOutlet = true;
-                        break;
-                    }
-                    loc.second++;
-                    stepCount++;
-                }
-                if(!hasOutlet){
-                    score[DIG_LEFT] -= 5;
-                }
+            if(deadEndFinder(RIGHT,currLoc)){
+                score[DIG_LEFT] -= 20;
             }
         }
         if(canDoAction(DIG_RIGHT)){
-            if(currLoc.first>=14 || !isSafeFall(make_pair(currLoc.first+2,currLoc.second+1))){
-                //search left for an outlet
-                bool hasOutlet = false;
-                pair<int,int> loc = currLoc;
-                int stepCount=0;
-                while(loc.second>=0 && !isImpassable(map[loc.first][loc.second])){
-                    if(stepCount>5){
-                        hasOutlet = true;
-                        break;
-                    }
-                    if(map[loc.first][loc.second]==LADDER || map[loc.first+1][loc.second]==LADDER){
-                        hasOutlet=true;
-                        break;
-                    }
-                    else if(!isSupported(loc)){
-                        if(isSafeFall(loc))
-                            hasOutlet = true;
-                        break;
-                    }
-                    loc.second--;
-                    stepCount++;
-                }
-                if(!hasOutlet){
-                    score[DIG_RIGHT] -= 5;
-                }
+            if(deadEndFinder(LEFT,currLoc)){
+                score[DIG_RIGHT] -= 20;
             }
         }
     }
     score[NONE]=0;//prefer anything do doing nothing
+    for(int i=0;i<7;i++){
+        TRACE("SCORE: %s %d\n",actionNames[i],score[i]);
+    }
 }

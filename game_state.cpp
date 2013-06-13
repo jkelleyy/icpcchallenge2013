@@ -48,7 +48,7 @@ bool canDoAction2(Action act,const pair<int,int>& loc){
 
 }
 
-bool canDoActionRaw(Action act, const pair<int,int>& loc){
+bool World::canDoActionRaw(Action act, const pair<int,int>& loc){
     switch(act){
     case NONE:
         return true;
@@ -83,7 +83,7 @@ bool canDoActionRaw(Action act, const pair<int,int>& loc){
     return false;//should be unreachable
 }
 
-bool canDoActionPlayer(Action act,const pair<int,int>& loc){
+bool World::canDoActionPlayer(Action act,const pair<int,int>& loc){
     if(!isAlive() && act!=NONE)
         return false;
     if((act==DIG_LEFT || act==DIG_RIGHT) && brickDelay!=0)
@@ -91,7 +91,7 @@ bool canDoActionPlayer(Action act,const pair<int,int>& loc){
     return canDoActionRaw(act,loc);
 }
 
-bool canDoActionOpponent(Action act,const pair<int,int>& loc){
+bool World::canDoActionOpponent(Action act,const pair<int,int>& loc){
     if(enemyLoc.first!=-1 && act!=NONE)
         return false;
     if((act==DIG_LEFT || act==DIG_RIGHT) && enemyBrickDelay!=0)
@@ -99,7 +99,7 @@ bool canDoActionOpponent(Action act,const pair<int,int>& loc){
     return canDoActionRaw(act,loc);
 }
 
-bool canDoActionEnemy(Action act,const pair<int,int>& loc){
+bool World::canDoActionEnemy(Action act,const pair<int,int>& loc){
     switch(act){
     case NONE:
         return true;

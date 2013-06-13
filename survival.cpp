@@ -152,6 +152,58 @@ struct Info{
     ChaseInfo info;
 };
 
+
+bool deadEndFinder(Action dir,const pair<int,int>& loc){
+    if(dir!=LEFT && dir!=RIGHT && dir!=TOP && dir!=BOTTOM)
+        return false;
+    if(!canDoAction(dir,loc))
+        return true;
+    set<pair<int,int> > seen;
+    queue<pair<int,int> > todo;
+    seen.insert(loc);
+    pair<int,int> start = simulateAction(dir,loc);
+    todo.push(start);
+    seen.insert(start);
+    while(!todo.empty()){
+        if(seen.size()>10)
+            return false;
+        pair<int,int> curr = todo.front();
+        todo.pop();
+        seen.insert(curr);
+        if(canDoAction(LEFT,curr)){
+            pair<int,int> next = simulateAction(LEFT,curr);
+            if(seen.find(next)==seen.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+        if(canDoAction(RIGHT,curr)){
+            pair<int,int> next = simulateAction(RIGHT,curr);
+            if(seen.find(next)==seen.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+
+        if(canDoAction(TOP,curr)){
+            pair<int,int> next = simulateAction(TOP,curr);
+            if(seen.find(next)==seen.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+
+        if(canDoAction(BOTTOM,curr)){
+            pair<int,int> next = simulateAction(BOTTOM,curr);
+            if(seen.find(next)==seen.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+    }
+    return true;
+}
+
 static bool isActionReversible(Action a, pair<int,int> loc){
     //assumes the action is possible and that the current locations is supported
     switch(a){
@@ -385,6 +437,15 @@ void scoreSurvival(int *score){
             }
 
         }
+        if(deadEndFinder(LEFT,currLoc))
+            score[LEFT]-=20;
+        if(deadEndFinder(RIGHT,currLoc))
+            score[RIGHT]-=20;
+        if(deadEndFinder(TOP,currLoc))
+            score[TOP]-=20;
+        if(deadEndFinder(BOTTOM,currLoc))
+            score[BOTTOM]-=20;
+
         //make sure not to walk into spawning enemies
         for(int i=0;i<nenemies;i++){
             if(enemies[i].spawnDelay==1){

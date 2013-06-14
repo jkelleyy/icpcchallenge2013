@@ -1,0 +1,139 @@
+#include "util.h"
+#include "game_state.h"
+#include "points.h"
+#include "survival.h"
+#include "points.h"
+#include "map_component.h"
+
+using namespace std;
+
+void printReachableMatrix(int starti, int startj)
+{
+	TRACE("Reachable matrix:\n");
+	for(int i = 0; i < 16; i++)
+	{
+		TRACE("reachable ");
+		for(int j = 0; j < 26; j++)
+			if(reachable[starti][startj][i][j])
+				TRACE("1 ");
+			else
+				TRACE("0 ");
+		TRACE("\n");
+	}
+}
+
+void printComponentMatrix()
+{
+	TRACE("Component matrix:\n");
+	for(int i = 0; i < 16; i++)
+	{
+		TRACE("comp ");
+		for(int j = 0; j < 26; j++)
+			TRACE("%2d ", component[i][j]);
+		TRACE("\n");
+	}
+}
+
+void dfs(pair<int,int> start, pair<int,int> curr)
+{
+	if(reachable[start.first][start.second][curr.first][curr.second])
+		return;
+	reachable[start.first][start.second][curr.first][curr.second] = true;
+	
+	for(int i = 0; i < 7; i++)
+		if(canDoAction2(static_cast<Action>(i), curr))
+			dfs(start, simulateAction(static_cast<Action>(i), curr));
+	
+	return;
+}
+
+void computeAllWayReachability()
+{
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			for(int ii = 0; ii < 16; ii++)
+				for(int jj = 0; jj < 26; jj++)
+					reachable[i][j][ii][jj] = false;
+	
+	for(int i = 0; i < 16; i++)
+	{
+		for(int j = 0; j < 26; j++)
+		{
+			pair<int,int> start = make_pair(i, j);
+			dfs(start, start);
+		}
+	}
+}
+
+void assignComponents()
+{
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			component[i][j] = -1;
+
+	int comp = 0;
+	for(int i = 0; i < 16; i++)
+	{
+		for(int j = 0; j < 26; j++)
+		{
+			if(component[i][j] == -1)
+				component[i][j] = comp++;
+			for(int ii = 0; ii < 16; ii++)
+				for(int jj = 0; jj < 26; jj++)
+					if((reachable[i][j][ii][jj]) && (reachable[ii][jj][i][j]))
+						component[ii][jj] = component[i][j];
+		}
+	}
+}
+
+void findGoldInComponents()
+{
+	for(int i = 0; i < 600; i++)
+		gold_comp[i] = 0;
+
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(component[i][j] != -1)
+				if(map[i][j] == GOLD)
+					gold_comp[component[i][j]]++;
+}
+
+void findTotalGoldInMap()
+{
+	totalGoldOnMap = 0;
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(map[i][j] == GOLD)
+				totalGoldOnMap++;
+}
+
+//This function is not used anymore, and will be removed.
+bool isSuicidal(Action action, pair<int,int> loc)
+{
+	pair<int,int> next = simulateAction(action, loc);
+	while(next.first<15 && !isSolid(map[next.first+1][next.second]))
+		next.first++;
+	if(map[next.first][next.second] == REMOVED_BRICK)
+		return true;
+	return false;
+}
+
+int goldInCurrComponent(pair<int,int> loc)
+{
+	int comp = component[loc.first][loc.second];
+
+	int gold = 0;
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 26; j++)
+			if(component[i][j] == comp)
+				if(map[i][j] == GOLD)
+					gold++;
+	return gold;
+}
+
+bool shouldSuicide(pair<int,int> loc)
+{
+	if((goldInCurrComponent(loc) == 0) && (gold_comp[component[loc.first][loc.second]] < (totalGoldOnMap / 2)))
+		return true;
+	return false;    
+}

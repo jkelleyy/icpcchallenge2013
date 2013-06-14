@@ -1,5 +1,6 @@
 #include "survival.h"
 #include "game_state.h"
+#include "map_component.h"
 #include "util.h"
 #include <queue>
 #include <set>
@@ -284,29 +285,6 @@ static bool isActionReversible(Action a, pair<int,int> loc){
     return canDoActionEnemy(reverseAction(a),loc);
 }
 
-int goldInCurrComponent(pair<int,int> loc)
-{
-	int comp = component[loc.first][loc.second];
-
-	int gold = 0;
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			if(component[i][j] == comp)
-				if(map[i][j] == GOLD)
-					gold++;
-	return gold;
-}
-
-bool isSuicidal(Action action, pair<int,int> loc)
-{
-	pair<int,int> next = simulateAction(action, loc);
-	while(next.first<15 && !isSolid(map[next.first+1][next.second]))
-		next.first++;
-	if(map[next.first][next.second] == REMOVED_BRICK)
-		return true;
-	return false;
-}
-
 //figure out who an enemy is chasing
 //and which direction it will chase in
 pair<int,ChaseInfo> computeChaseState(int enemyId){
@@ -498,10 +476,7 @@ void scoreSurvival(int *score){
     }
     if(isAlive()){
         for(int i=NONE;i<7;i++){
-			if((goldInCurrComponent(currLoc) == 0) && (gold_comp[component[currLoc.first][currLoc.second]] < (totalGoldOnMap / 2)))
-				if(isSuicidal(static_cast<Action>(i), currLoc))
-					score[i] += 1000;
-            if(score[i]>0 && isTrap(static_cast<Action>(i)))
+			if(score[i]>0 && isTrap(static_cast<Action>(i)))
 				score[i]-=200;//really bad, but not instant death,
             pair<int,int> newLoc = simulateAction(static_cast<Action>(i),currLoc);
             if(score[i]>=0){

@@ -370,13 +370,6 @@ static bool doTurn(){
     scoreSurvival(survivalScore);
 
     //TODO add points score
-    bool hasChaser = false;
-    for(int i=0;i<nenemies;i++){
-        if(game.enemies[i].chaseState==CHASE_RED && game.enemies[i].chaseInfo.pathLength<5){
-            hasChaser = true;
-            break;
-        }
-    }
 
     vector<state> states = pointsScore(5);
     state s= states.size()>1?states[1]:states[0];
@@ -384,22 +377,15 @@ static bool doTurn(){
     for(int i =2; i <states.size();i++)
     {
 	    TRACE("STATE: %d DIST %d\n",i,states[i].depth);
-        if((s.first==DIG_LEFT || s.first==DIG_RIGHT) && hasChaser){
-            s = states[i];
-        }
-	    else if(states[i].depth-states[i-1].depth<=5)
+	    if(states[i].depth-states[i-1].depth<=5)
 		    s = states[i];
 	    else
 		    break;
 
     }
-    if(s.first==DIG_LEFT || s.first==DIG_RIGHT){
+    if(s.first==DIG_LEFT || s.first==DIG_RIGHT)
 	    TRACE("ORDERED TO DIG!\n");
-        if(hasChaser){
-            s.first = NONE;
-        }
-    }
-    TRACE("TRACE: Action: %s pos: %d %d depth: %d\n",actionNames[s.first],s.pos.first,s.pos.second,s.depth);
+    TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
     if(s.first!=NONE)
         survivalScore[s.first]+=50;
 

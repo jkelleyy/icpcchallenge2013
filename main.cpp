@@ -288,7 +288,7 @@ static bool doTurn(){
 	    TRACE("ORDERED TO DIG!\n");
     TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
     if(s.first!=NONE)
-        survivalScore[s.first]+=50;
+        survivalScore[s.first]+=500;
 
     vector<Action> bests;
     int maxScore = 0;
@@ -311,6 +311,13 @@ static bool doTurn(){
         }
         TRACE("\n");
     }
+
+	if(shouldSuicide(currLoc))
+	{
+		TRACE("saurabh says dieeeeee\n");
+		a = getSuicidalMove(currLoc);
+	}
+	
     act(a);
     TRACE("TRACE: Turn #%d finished with action %s with a score of %d\n",currTurn,actionNames[a],maxScore);
 

@@ -4,6 +4,7 @@
 #include <utility>
 #include <list>
 #include <vector>
+#include "points.h"
 
 using namespace std;
 
@@ -15,5 +16,6 @@ void assignComponents();
 void findGoldInComponents();
 void findTotalGoldInMap();
 bool shouldSuicide(pair<int,int> loc);
+Action getSuicidalMove(pair<int,int> loc);
 
 #endif

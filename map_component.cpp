@@ -137,3 +137,27 @@ bool shouldSuicide(pair<int,int> loc)
 		return true;
 	return false;    
 }
+
+Action getDirectionClosestToEnemy(pair<int,int> loc)
+{
+	//TODO: Fix this
+	if(canDoAction(LEFT, loc))
+		return LEFT;
+	else if(canDoAction(RIGHT, loc))
+		return RIGHT;
+	return NONE;
+}
+
+Action getSuicidalMove(pair<int,int> loc)
+{
+	if(isSuicidal(LEFT, loc))
+		return LEFT;
+	if(isSuicidal(RIGHT, loc))
+		return RIGHT;
+	if(canDoAction(DIG_LEFT, loc))
+		return DIG_LEFT;
+	else if(canDoAction(DIG_RIGHT, loc))
+		return DIG_RIGHT;
+	else
+		return getDirectionClosestToEnemy(loc);
+}

@@ -1,5 +1,6 @@
 #include "game_state.h"
 #include "points.h"
+#include "map_component.h"
 #include "util.h"
 
 #include <queue>
@@ -59,6 +60,7 @@ void changeMap(World& w, vector<dugCell> dugCells)
 
 
 vector<state> pointsScore(int desiredGold){
+	
 	int turnNo = game.currTurn;
 	desiredGold = desiredGold>maxGold?maxGold:desiredGold;
 

@@ -172,7 +172,7 @@ vector<state> pointsScore(int desiredGold){
 							alteredState.cost++;
 
 					}
-
+/*
 					int turnB = max(0,game.currTurn-5);
 					for(int j = turnB; j <game.currTurn;j++)
 					{
@@ -181,11 +181,11 @@ vector<state> pointsScore(int desiredGold){
 						Action took = actions[j];
 						if(alteredLoc.first==r && alteredLoc.second==c && a==took)
 						{
-							alteredState.cost++;
-							TRACE("ADDING EXTRA COST\n");
+							//alteredState.cost++;
+							//TRACE("ADDING EXTRA COST\n");
 						}
 					}
-
+*/
 					visited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
 
 					if(a!=DIG_LEFT && a!=DIG_RIGHT){

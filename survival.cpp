@@ -427,7 +427,7 @@ void scoreSurvival(int *score){
                 }
             }
         }
-        else if(enemies[i].isFalling()){
+        /*else if(enemies[i].isFalling()){
             //don't walk into falling things...
             //this feels like a bit of a brute force method but oh well
             if(enemies[i].loc.first==currLoc.first-1){
@@ -443,7 +443,7 @@ void scoreSurvival(int *score){
                     break;
                 }
             }
-        }
+        }*/
     }
     if(isAlive()){
         for(int i=NONE;i<7;i++){

@@ -19,6 +19,7 @@ struct state
 	long long goldNumber;
 	int digDelay;
 	vector<dugCell> dugCells;
+	int cost;
 };
 
 //finds the action which gets you closest to a gold

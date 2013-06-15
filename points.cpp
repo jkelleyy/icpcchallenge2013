@@ -22,7 +22,7 @@ ll digRight = ((ll)1)<<62;
 void updateDelay(World& w)
 {
 	for(int i =0; i<16; i++)
-		for(int j = 0; j <26; j++)
+		for(int j = 0; j <25; j++)
 		{
 			if(w.timeout[i][j]==1)
 				w.map[i][j]=originalMap[i][j];
@@ -34,14 +34,14 @@ void updateDelay(World& w)
 void updateMapCopy(World& w)
 {
 			for(int i =0; i<16; i++)
-				for(int j = 0; j <26; j++)
+				for(int j = 0; j <25; j++)
 					mapCopy[i][j] = w.map[i][j];
 }
 
 void restoreMapCopy(World& w)
 {
 			for(int i =0; i<16; i++)
-				for(int j = 0; j <26; j++)
+				for(int j = 0; j <25; j++)
 					w.map[i][j] = mapCopy[i][j];
 }
 
@@ -64,7 +64,7 @@ vector<state> pointsScore(int desiredGold){
 
 
 	for(int i =0; i<16; i++)
-		for(int j = 0; j <26; j++)
+		for(int j = 0; j <25; j++)
 		{
 			w.map[i][j] = game.map[i][j];
 			w.timeout[i][j] = game.timeout[i][j];
@@ -76,7 +76,7 @@ vector<state> pointsScore(int desiredGold){
 	if(turnNo ==0){
 		int goldSoFar = 1;
 		for(int i =0; i<16; i++)
-			for(int j = 0; j <26; j++)
+			for(int j = 0; j <25; j++)
 				if(map[i][j]==GOLD){
 					goldNumber[i][j] = 1<<goldSoFar;
 					goldSoFar++;
@@ -92,6 +92,7 @@ vector<state> pointsScore(int desiredGold){
 	currState.goldNumber = 1;
 	currState.numGold = 0;
 	currState.digDelay = game.brickDelay;
+	currState.cost = 0;
 	//The best state to get X pieces of gold (X is index)
 	vector<state> best;
 	best.push_back(currState);
@@ -107,7 +108,11 @@ vector<state> pointsScore(int desiredGold){
 
 	int lastDepthSeen = 0;
 
-	while(!q.empty()){
+	ll iter = 0;
+	ll MAX_ITER = 6000;
+	while(!q.empty() && iter < MAX_ITER){
+		iter++;
+		TRACE("ITER: %ld\n",iter);
 		state newState = q.front();q.pop();
 		loc cur = newState.pos;
 		if(newState.depth > lastDepthSeen)
@@ -126,13 +131,15 @@ vector<state> pointsScore(int desiredGold){
 			//TRACE("GOLDNUM %lld\n",newState.goldNumber);
 			newState.numGold++;
 			newState.goldNumber |= goldNumber[cur.first][cur.second];
-			if(newState.numGold==desiredGold)
+			if(newState.numGold==(desiredGold+1))
 			{
 				best.push_back(newState);
 				return best;
 			}
 			else if (best.size()<=newState.numGold)
-				best.push_back(newState); 
+				best.push_back(newState);
+			else if (best[newState.numGold].cost>newState.cost)
+				best[newState.numGold] = newState;
 		}
 
 
@@ -155,7 +162,30 @@ vector<state> pointsScore(int desiredGold){
 					alteredState.goldNumber = newGoldNum;
 					alteredState.numGold = newState.numGold;
 					alteredState.dugCells = newState.dugCells;
+					alteredState.cost = newState.cost;
+
 					
+    					for(int j=0;j<nenemies;j++)
+					{
+						pair<int,int>  eloc = enemies[j].loc;
+						if(eloc.first==alteredState.pos.first && eloc.second==alteredState.pos.second)
+							alteredState.cost++;
+
+					}
+
+					int turnB = max(0,game.currTurn-5);
+					for(int j = turnB; j <game.currTurn;j++)
+					{
+						int r = rlocs[j];
+						int c = clocs[j];
+						Action took = actions[j];
+						if(alteredLoc.first==r && alteredLoc.second==c && a==took)
+						{
+							alteredState.cost++;
+							TRACE("ADDING EXTRA COST\n");
+						}
+					}
+
 					visited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
 
 					if(a!=DIG_LEFT && a!=DIG_RIGHT){

@@ -127,6 +127,9 @@ static char (&map)[16][26] = game.map;
 
 extern char originalMap[16][26];
 extern int component[16][26];
+extern vector<Action> actions;
+extern vector<int > rlocs;
+extern vector<int> clocs;
 extern int gold_comp[600];
 extern int max_gold_comp;
 extern int totalGoldOnMap;

@@ -34,7 +34,7 @@ static inline void printReachableMatrix(int starti, int startj)
 	for(int i = 0; i < 16; i++)
 	{
 		TRACE("reachable ");
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			if(reachable[starti][startj][i][j])
 				TRACE("1 ");
 			else
@@ -49,7 +49,7 @@ static inline void printComponentMatrix()
 	for(int i = 0; i < 16; i++)
 	{
 		TRACE("comp ");
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			TRACE("%2d ", component[i][j]);
 		TRACE("\n");
 	}
@@ -71,14 +71,14 @@ static inline void dfs(pair<int,int> start, pair<int,int> curr)
 static inline void computeAllWayReachability()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			for(int ii = 0; ii < 16; ii++)
-				for(int jj = 0; jj < 26; jj++)
+				for(int jj = 0; jj < 25; jj++)
 					reachable[i][j][ii][jj] = false;
 	
 	for(int i = 0; i < 16; i++)
 	{
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 		{
 			pair<int,int> start = make_pair(i, j);
 			dfs(start, start);
@@ -89,18 +89,18 @@ static inline void computeAllWayReachability()
 static inline void assignComponents()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			component[i][j] = -1;
 
 	int comp = 0;
 	for(int i = 0; i < 16; i++)
 	{
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 		{
 			if(component[i][j] == -1)
 				component[i][j] = comp++;
 			for(int ii = 0; ii < 16; ii++)
-				for(int jj = 0; jj < 26; jj++)
+				for(int jj = 0; jj < 25; jj++)
 					if((reachable[i][j][ii][jj]) && (reachable[ii][jj][i][j]))
 						component[ii][jj] = component[i][j];
 		}
@@ -113,7 +113,7 @@ static inline void findGoldInComponents()
 		gold_comp[i] = 0;
 
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			if(component[i][j] != -1)
 				if(map[i][j] == GOLD)
 					gold_comp[component[i][j]]++;
@@ -123,7 +123,7 @@ static inline void findTotalGoldInMap()
 {
 	totalGoldOnMap = 0;
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			if(map[i][j] == GOLD)
 				totalGoldOnMap++;
 }
@@ -131,7 +131,7 @@ static inline void findTotalGoldInMap()
 static inline void saveFirstMap()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			originalMap[i][j] = map[i][j];
 	
 }
@@ -303,7 +303,7 @@ static void processEnemy2(int i){
 static void setSquareDelays()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			if(originalMap[i][j]==GOLD && game.map[i][j] !=GOLD)
 			{
 				if(game.timeout[i][j]==0)
@@ -372,12 +372,15 @@ static bool doTurn(){
     //TODO add points score
 
     vector<state> states = pointsScore(5);
+    //for(int i =1; i <states.size();i++)
+//	    survivalScore[states[i].first]+=100/states[i].depth*i;
+    
     state s= states.size()>1?states[1]:states[0];
     TRACE("State 1 DIST: %d\n",s.depth);
     for(int i =2; i <states.size();i++)
     {
-	    TRACE("STATE: %d DIST %d\n",i,states[i].depth);
-	    if(states[i].depth-states[i-1].depth<=5)
+	    TRACE("STATE: %d DIST %d COST %d\n",i,states[i].depth,states[i].cost);
+	    if(states[i].depth-s.depth<3 || states[i].cost<=s.cost)
 		    s = states[i];
 	    else
 		    break;
@@ -385,10 +388,10 @@ static bool doTurn(){
     }
     if(s.first==DIG_LEFT || s.first==DIG_RIGHT)
 	    TRACE("ORDERED TO DIG!\n");
-    TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
+    TRACE("TRACE: Action: %s pos: %d %d depth: %d\n",actionNames[static_cast<int>(s.first)],s.pos.first,s.pos.second,s.depth);
     if(s.first!=NONE)
         survivalScore[s.first]+=50;
-
+	
     vector<Action> bests;
     int maxScore = 0;
     for(int i=NONE;i<7;i++){
@@ -410,6 +413,10 @@ static bool doTurn(){
         }
         TRACE("\n");
     }
+
+    rlocs.push_back(currLoc.first);
+    clocs.push_back(currLoc.second);
+    actions.push_back(a);
     act(a);
     TRACE("TRACE: Turn #%d finished with action %s with a score of %d\n",currTurn,actionNames[a],maxScore);
 

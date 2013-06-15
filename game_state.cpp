@@ -12,6 +12,9 @@ int gold_comp[600];
 int totalGoldOnMap;
 int max_gold_comp;
 int component[16][26];
+vector<int > rlocs;
+vector<int> clocs;
+vector<Action> actions;
     
 pair<int, int> simulateAction(Action act,const pair<int,int>& loc){
 	if(!isAlive())

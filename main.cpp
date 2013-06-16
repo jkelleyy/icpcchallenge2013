@@ -15,14 +15,18 @@
 using namespace std;
 
 static inline void readMap(){
-    for(int c=0;c<16;c++){
-        gets(&(map[c][0]));
-        if(map[c][0]!=EMPTY &&
-           map[c][0]!=LADDER &&
-           map[c][0]!=BRICK &&
-           map[c][0]!=GOLD &&
-           map[c][0]!=REMOVED_BRICK)
-            c--;
+    for(int r=0;r<16;r++){
+        char buffer[27];
+        fgets(buffer,27,stdin);
+        if(buffer[0]!=EMPTY &&
+           buffer[0]!=LADDER &&
+           buffer[0]!=BRICK &&
+           buffer[0]!=GOLD &&
+           buffer[0]!=REMOVED_BRICK)
+            r--;
+        else
+            for(int c=0;c<25;c++)
+                game.map.lookup(r,c) = buffer[c];
     }
 }
 
@@ -34,7 +38,7 @@ static inline void printReachableMatrix(int starti, int startj)
 	for(int i = 0; i < 16; i++)
 	{
 		TRACE("reachable ");
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			if(reachable[starti][startj][i][j])
 				TRACE("1 ");
 			else
@@ -49,38 +53,38 @@ static inline void printComponentMatrix()
 	for(int i = 0; i < 16; i++)
 	{
 		TRACE("comp ");
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			TRACE("%2d ", component[i][j]);
 		TRACE("\n");
 	}
 }
 
-static inline void dfs(pair<int,int> start, pair<int,int> curr)
+static inline void dfs(loc_t start, loc_t curr)
 {
 	if(reachable[start.first][start.second][curr.first][curr.second])
 		return;
 	reachable[start.first][start.second][curr.first][curr.second] = true;
-	
+
 	for(int i = 0; i < 7; i++)
 		if(canDoAction2(static_cast<Action>(i), curr))
 			dfs(start, simulateAction(static_cast<Action>(i), curr));
-	
+
 	return;
 }
 
 static inline void computeAllWayReachability()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			for(int ii = 0; ii < 16; ii++)
-				for(int jj = 0; jj < 26; jj++)
+				for(int jj = 0; jj < 25; jj++)
 					reachable[i][j][ii][jj] = false;
-	
+
 	for(int i = 0; i < 16; i++)
 	{
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 		{
-			pair<int,int> start = make_pair(i, j);
+			loc_t start = make_pair(i, j);
 			dfs(start, start);
 		}
 	}
@@ -89,18 +93,18 @@ static inline void computeAllWayReachability()
 static inline void assignComponents()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			component[i][j] = -1;
 
 	int comp = 0;
 	for(int i = 0; i < 16; i++)
 	{
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 		{
 			if(component[i][j] == -1)
 				component[i][j] = comp++;
 			for(int ii = 0; ii < 16; ii++)
-				for(int jj = 0; jj < 26; jj++)
+				for(int jj = 0; jj < 25; jj++)
 					if((reachable[i][j][ii][jj]) && (reachable[ii][jj][i][j]))
 						component[ii][jj] = component[i][j];
 		}
@@ -113,9 +117,9 @@ static inline void findGoldInComponents()
 		gold_comp[i] = 0;
 
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
+		for(int j = 0; j < 25; j++)
 			if(component[i][j] != -1)
-				if(map[i][j] == GOLD)
+				if(game.checkMapRaw(i,j) == GOLD)
 					gold_comp[component[i][j]]++;
 }
 
@@ -123,58 +127,59 @@ static inline void findTotalGoldInMap()
 {
 	totalGoldOnMap = 0;
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			if(map[i][j] == GOLD)
+		for(int j = 0; j < 25; j++)
+			if(game.checkMapRaw(i,j) == GOLD)
 				totalGoldOnMap++;
 }
 
 static inline void saveFirstMap()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			originalMap[i][j] = map[i][j];
-	
+		for(int j = 0; j < 25; j++)
+			fixedData.baseMap[i][j] = game.checkMapRaw(i,j);
+
 }
 
 static inline void initGame(){
-    scanf(" %d\n",&nrounds);
+    scanf(" %d\n",&fixedData.nrounds);
     readMap();
-    scanf(" %d %d ",&currLoc.first,&currLoc.second);
-    ourSpawn = currLoc;
-    brickDelay = 0;
-    scanf(" %d %d ",&enemyLoc.first,&enemyLoc.second);
-    enemySpawn = enemyLoc;
-    enemySpawnDelay = 0;
-    enemyBrickDelay = 0;
-    scanf(" %d\n",&nenemies);
-    for(int i=0;i<nenemies;i++){
-        //todo, find a better way of dealing with the program.
-        scanf(" %d %d %s",&enemies[i].loc.first,&enemies[i].loc.second,tempBuffer);
-        enemies[i].spawn = enemies[i].loc;
-        enemies[i].program.resize(strlen(tempBuffer));
-        for(int j=0;j<enemies[i].program.size();j++){
+    scanf(" %hhd %hhd ",&game.currLoc.first,&game.currLoc.second);
+    fixedData.ourSpawn = game.currLoc;
+    game.brickDelay = 0;
+    scanf(" %hhd %hhd ",&game.enemyLoc.first,&game.enemyLoc.second);
+    fixedData.enemySpawn = game.enemyLoc;
+    game.enemySpawnDelay = 0;
+    game.enemyBrickDelay = 0;
+    scanf(" %d\n",&fixedData.nenemies);
+    game.enemies.resize(fixedData.nenemies);
+    for(int i=0;i<fixedData.nenemies;i++){
+        SharedEnemyInfo* sinfo = new SharedEnemyInfo;
+        game.enemies[i].info = sinfo;
+        scanf(" %hhd %hhd %s",&sinfo->spawn.first,&sinfo->spawn.second,tempBuffer);
+        game.enemies[i].setLoc(game.enemies[i].info->spawn);
+        sinfo->program.resize(strlen(tempBuffer));
+        for(int j=0;j<game.enemies[i].info->program.size();j++){
             switch(tempBuffer[j]){
             case 'R':
-                enemies[i].program[j] = RIGHT;
+                sinfo->program[j] = RIGHT;
                 break;
             case 'L':
-                enemies[i].program[j] = LEFT;
+                sinfo->program[j] = LEFT;
                 break;
             case 'T':
-                enemies[i].program[j] = TOP;
+                sinfo->program[j] = TOP;
                 break;
             case 'B':
-                enemies[i].program[j] = BOTTOM;
+                sinfo->program[j] = BOTTOM;
                 break;
             }
         }
-        enemies[i].master = NOONE;
-        enemies[i].isTrapped = false;
-        enemies[i].spawnDelay = 0;
-        enemies[i].distSq = distSq(enemies[i].loc,currLoc);
-        enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
+        game.enemies[i].setMaster(NOONE);
+        game.enemies[i].setIsTrapped(false);
+        game.enemies[i].setSpawnDelay(0);
+        game.enemies[i].setChaseState(PATROL);
     }
-    currTurn = -1;
+    game.currTurn = -1;
     currScore = 0;
     enemyScore = 0;
 	computeAllWayReachability();
@@ -197,102 +202,89 @@ static inline void act(Action act){
 
 //process the input for one of the enemies
 static void processEnemy1(int i){
-    pair<int,int> oldLoc = enemies[i].loc;
+    loc_t oldLoc = game.enemies[i].getLoc();
+    loc_t newLoc;
     int master;
-    scanf(" %d %d %d",&enemies[i].loc.first,&enemies[i].loc.second,&master);
-    enemies[i].master = static_cast<Player>(master);
-    if(enemies[i].loc.first!=-1 && oldLoc.first!=-1 && oldLoc!=enemies[i].loc){
-        if(enemies[i].loc.first<oldLoc.first){
-            enemies[i].lastMove = TOP;
+    scanf(" %hhd %hhd %d",&newLoc.first,&newLoc.second,&master);
+    game.enemies[i].setLoc(newLoc);
+    game.enemies[i].setMaster(static_cast<Player>(master));
+    if(newLoc.first!=-1 && oldLoc.first!=-1 && oldLoc!=newLoc){
+        if(newLoc.first<oldLoc.first){
+            game.enemies[i].setLastMove(TOP);
         }
-        else if (enemies[i].loc.first>oldLoc.first){
+        else if (newLoc.first>oldLoc.first){
             //even if it's falling we should interpret that as a "BOTTOM"
             //since that's what the enemies program does
-            enemies[i].lastMove = BOTTOM;
+            game.enemies[i].setLastMove(BOTTOM);
         }
-        else if(enemies[i].loc.second<oldLoc.second){
-            enemies[i].lastMove = LEFT;
+        else if(newLoc.second<oldLoc.second){
+            game.enemies[i].setLastMove(LEFT);
         }
         else{
-            enemies[i].lastMove = RIGHT;
+            game.enemies[i].setLastMove(RIGHT);
         }
     }
     else{
-        enemies[i].lastMove = NONE;
+        game.enemies[i].setLastMove(NONE);
     }
-    if(enemies[i].loc.first!=-1 && (map[enemies[i].loc.first][enemies[i].loc.second]==REMOVED_BRICK || map[enemies[i].loc.first][enemies[i].loc.second]==FILLED_BRICK)){
-        map[enemies[i].loc.first][enemies[i].loc.second]=FILLED_BRICK;
-        enemies[i].isTrapped = true;
+    if(game.checkMapSafe(newLoc)==REMOVED_BRICK || game.checkMapSafe(newLoc)==FILLED_BRICK){
+        game.map.lookup(newLoc)=FILLED_BRICK;
+        game.enemies[i].setIsTrapped(true);
     }
     else{
-        enemies[i].isTrapped = false;
+        game.enemies[i].setIsTrapped(false);
     }
 
 }
 static void processEnemy2(int i){
-    if(enemies[i].loc.first==-1){
-        enemies[i].distSq = -1;
-        enemies[i].distSqToOpponent = -1;
-        if(enemies[i].spawnDelay==0){
-            enemies[i].spawnDelay=max(24-missedTurns,1);
+    if(!game.enemies[i].isAlive()){
+        if(game.enemies[i].getSpawnDelay()==0){
+            game.enemies[i].setSpawnDelay(max(24-game.missedTurns,1));
         }
         else{
-            enemies[i].spawnDelay--;
-            if(enemies[i].spawnDelay==0)
-                enemies[i].spawnDelay = 1;
+            game.enemies[i].setSpawnDelay(max(game.enemies[i].getSpawnDelay()-1,1));
         }
-        enemies[i].chaseState = PATROL;
-        enemies[i].patrolIndex = 0;
+        game.enemies[i].setChaseState(PATROL);
+        game.enemies[i].patrolIndex = 0;
     }
     else{
-        enemies[i].spawnDelay=0;
-        if(currLoc.first!=-1 && !enemies[i].isTrapped)
-            enemies[i].distSq = distSq(enemies[i].loc,currLoc);
-        else
-            enemies[i].distSq = -1;
-        if(enemyLoc.first!=-1 && !enemies[i].isTrapped)
-            enemies[i].distSqToOpponent = distSq(enemies[i].loc,enemyLoc);
-        else
-            enemies[i].distSqToOpponent = -1;
-        pair<int,ChaseInfo> info = computeChaseState(i);
-        enemies[i].chaseInfo = info.second;
-        switch(enemies[i].chaseState){
+        game.enemies[i].setSpawnDelay(0);
+        switch(game.enemies[i].getChaseState()){
         case CHASE_BLUE:
         case CHASE_RED:
-            if(enemies[i].lastMove!=NONE)
-                enemies[i].chaseStack.push_front(enemies[i].lastMove);
+            if(game.enemies[i].getLastMove()!=NONE)
+                game.enemies[i].chaseStack.push(game.enemies[i].getLastMove());
             break;
         case PATROL:
-            if(enemies[i].lastMove!=NONE){
-                enemies[i].patrolIndex++;
-                enemies[i].patrolIndex %= enemies[i].program.size();
+            if(game.enemies[i].getLastMove()!=NONE){
+                game.enemies[i].patrolIndex++;
+                game.enemies[i].patrolIndex %= game.enemies[i].info->program.size();
             }
             break;
         case RETURN_TO_PATROL:
             //assert(!enemies[i].chaseStack.empty());
-            if(enemies[i].lastMove!=NONE)
-                enemies[i].chaseStack.pop_front();
-            if(enemies[i].chaseStack.empty())
-                enemies[i].chaseState = PATROL;
-
+            if(game.enemies[i].getLastMove()!=NONE)
+                game.enemies[i].chaseStack.pop();
+            if(game.enemies[i].chaseStack.empty())
+                game.enemies[i].setChaseState(PATROL);
             break;
         }
-
-        switch(info.first){
+        ChaseInfo info = computeChase(game,i);
+        switch(info.target){
         case RED:
-            enemies[i].chaseState = CHASE_RED;
+            game.enemies[i].setChaseState(CHASE_RED);
             break;
         case BLUE:
-            enemies[i].chaseState = CHASE_BLUE;
+            game.enemies[i].setChaseState(CHASE_BLUE);
             break;
         case NOONE:
-            switch(enemies[i].chaseState){
+            switch(game.enemies[i].getChaseState()){
             case CHASE_RED:
             case CHASE_BLUE:
-                if(enemies[i].chaseStack.empty())
-                    enemies[i].chaseState = PATROL;
+                if(game.enemies[i].chaseStack.empty())
+                    game.enemies[i].setChaseState(PATROL);
                 else
-                    enemies[i].chaseState = RETURN_TO_PATROL;
+                    game.enemies[i].setChaseState(RETURN_TO_PATROL);
                 break;
             }
 
@@ -303,15 +295,15 @@ static void processEnemy2(int i){
 static void setSquareDelays()
 {
 	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 26; j++)
-			if(originalMap[i][j]==GOLD && game.map[i][j] !=GOLD)
+		for(int j = 0; j < 25; j++)
+			if(originalMap[i][j]==GOLD && game.checkMapRaw(i,j) !=GOLD)
 			{
 				if(game.timeout[i][j]==0)
 					game.timeout[i][j]= 150;
 				else
 					game.timeout[i][j]--;
 			}
-			else if (originalMap[i][j]==BRICK && game.map[i][j]!=BRICK)
+			else if (originalMap[i][j]==BRICK && game.checkMapRaw(i,j)!=BRICK)
 			{
 				if(game.timeout[i][j]==0)
 					game.timeout[i][j]=25;
@@ -327,55 +319,60 @@ static bool doTurn(){
     if(nextTurn==-1)
         return false;
     TRACE("TRACE: Starting turn #%d\n",nextTurn);
-    missedTurns = nextTurn - currTurn -1;
-    if(missedTurns!=0)
-        WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",missedTurns);
-    currTurn = nextTurn;
+    game.missedTurns = nextTurn - game.currTurn -1;
+    if(game.missedTurns!=0)
+        WARN("WARNING: Lost Turn(s)! (%d turns lost)\n",game.missedTurns);
+    game.currTurn = nextTurn;
     readMap();
-   
-	setSquareDelays();   
-    
-    scanf(" %d %d %d %d",&currLoc.first,&currLoc.second,&currScore,&brickDelay);
-    scanf(" %d %d %d %d",&enemyLoc.first,&enemyLoc.second,&enemyScore,&enemyBrickDelay);
-    if(enemyLoc.first==-1){
-        if(enemySpawnDelay==0){
-            enemySpawnDelay = max(49-missedTurns,1);
+
+	//setSquareDelays();
+
+    scanf(" %hhd %hhd %d %hhd",&game.currLoc.first,&game.currLoc.second,&currScore,&game.brickDelay);
+    scanf(" %hhd %hhd %d %hhd",&game.enemyLoc.first,&game.enemyLoc.second,&enemyScore,&game.enemyBrickDelay);
+    if(game.enemyLoc.first==-1){
+        if(game.enemySpawnDelay==0){
+            game.enemySpawnDelay = max(49-game.missedTurns,1);
         }
         else{
-            enemySpawnDelay--;
-            if(enemySpawnDelay==0)
-                enemySpawnDelay=1;
+            game.enemySpawnDelay--;
+            if(game.enemySpawnDelay==0)
+                game.enemySpawnDelay=1;
         }
     }
     else{
-        enemySpawnDelay = 0;
+        game.enemySpawnDelay = 0;
     }
     //these two loops MUST be separate, the second depends on the first finishing
-    for(int i=0;i<nenemies;i++){
+    for(int i=0;i<fixedData.nenemies;i++){
         processEnemy1(i);
     }
-    for(int i=0;i<nenemies;i++){
+    for(int i=0;i<fixedData.nenemies;i++){
         processEnemy2(i);
     }
 
     for(int i=0;i<16;i++){
-        TRACE("MAP: %s\n",&map[i][0]);
+        TRACE("MAP: ");
+        for(int j=0;j<25;j++){
+            TRACE("%c",game.checkMapRaw(i,j));
+        }
+        TRACE("\n");
     }
 
-    TRACE("POS: %d %d\n",currLoc.first,currLoc.second);
+    TRACE("POS: %d %d\n",game.currLoc.first,game.currLoc.second);
 
     //actual ai starts here
     int survivalScore[7];
     memset(survivalScore,0,sizeof(int)*7);
-    scoreSurvival(survivalScore);
+    predict(survivalScore);
+
 
     //TODO add points score
     bool hasChaser = false;
-    for(int i=0;i<nenemies;i++){
-        if(game.enemies[i].chaseState==CHASE_RED && game.enemies[i].chaseInfo.pathLength<5){
-            hasChaser = true;
-            break;
-        }
+    for(int i=0;i<fixedData.nenemies;i++){
+        //if(game.enemies[i].getChaseState()==CHASE_RED && game.enemies[i].chaseInfo.pathLength<5){
+        //    hasChaser = true;
+        //    break;
+        //}
     }
 
     vector<state> states = pointsScore(5);
@@ -425,15 +422,19 @@ static bool doTurn(){
         TRACE("\n");
     }
     act(a);
-    TRACE("TRACE: Turn #%d finished with action %s with a score of %d\n",currTurn,actionNames[a],maxScore);
+    TRACE("TRACE: Turn #%d finished with action %s with a score of %d\n",game.currTurn,actionNames[a],maxScore);
 
     return true;
 }
 
 int main(){
     srand(time(NULL));
+    initSurvival();
     initGame();
     while(doTurn());
     TRACE("Game Finished!\n");
+    //printf("%ld\n",sizeof(World));
+    //printf("%ld\n",sizeof(vector<EnemyInfo>));
+    //printf("%ld\n",sizeof(EnemyInfo));
     return 0;
 }

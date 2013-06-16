@@ -6,8 +6,9 @@
 
 using namespace std;
 
-void scoreSurvival(int *scores);
+void predict(int *scores);
 
-pair<int,ChaseInfo> computeChaseState(int enemyId);
+ChaseInfo computeChase(const World&,int enemyId);
 
+void initSurvival();
 #endif

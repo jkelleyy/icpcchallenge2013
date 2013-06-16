@@ -32,6 +32,7 @@ static inline void readMap(){
 }
 
 static char tempBuffer[1000];
+static int dieCount = 0;
 
 static inline void saveFirstMap()
 {
@@ -345,10 +346,16 @@ static bool doTurn(){
 
 	if(shouldSuicide(game.currLoc))
 	{
-		TRACE("saurabh says dieeeeee\n");
-		a = getSuicidalMove(game.currLoc);
+		if(game.currLoc.first == 14)
+		{
+			a = getSuicidalMove(game.currLoc);
+		}
+		else
+		{
+			TRACE("saurabhhhhh: %d\n", game.currLoc.first);
+		}
 	}
-    ourLastMove = a;
+	ourLastMove = a;
     act(a);
     TRACE("TRACE: Turn #%d finished with action %s with a score of %f\n",game.currTurn,actionNames[a],maxScore);
 

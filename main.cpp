@@ -38,6 +38,12 @@ static inline void saveFirstMap()
 	for(int i = 0; i < 16; i++)
 		for(int j = 0; j < 25; j++)
 			fixedData.baseMap[i][j] = game.checkMapRaw(i,j);
+	for(int i = 0; i < 16; i++)
+		for(int j = 0; j < 25; j++)
+		{
+			game.timeout[i][j] =0;
+			originalMap[i][j] = game.checkMapRaw(i,j);
+		}
 }
 
 static inline void initGame(){
@@ -229,7 +235,6 @@ static void setSquareDelays()
 
 //returns false when finished
 static bool doTurn(){
-	fflush(stderr);
     int nextTurn;
     scanf(" %d",&nextTurn);
     TRACE("NEXT TURN: %d\n",nextTurn);
@@ -242,21 +247,13 @@ static bool doTurn(){
     game.currTurn = nextTurn;
     readMap();
 
-	//setSquareDelays();
+    setSquareDelays();
     int temp;
     int loc_first,loc_second;
     scanf(" %d %d %d %d",&loc_first,&loc_second,&currScore,&temp);
     game.currLoc.first = loc_first;
     game.currLoc.second = loc_second;
     game.brickDelay = temp;
-    TRACE("HERERERE!!!!!\n");
-    int aa,b,c,d;
-    //char one[200];
-    //scanf("%s",one);
-    //TRACE("NEXT: %s\n",one);
-    //scanf(" %d %d %d %d",&aa,&b, &c, &d);
-    //TRACE("a b c %d %d %d %d\n",aa,b,c,d);
-    //scanf(" %d %d %d %d",&aa,&b,&c,&d);
     scanf(" %d %d %d %d",&loc_first,&loc_second,&enemyScore,&temp);
     game.enemyLoc.first = loc_first;
     game.enemyLoc.second = loc_second;
@@ -276,13 +273,9 @@ static bool doTurn(){
     }
     //these two loops MUST be separate, the second depends on the first finishing
     for(int i=0;i<fixedData.nenemies;i++){
-		TRACE("READING ENEMY %d %d\n",i,fixedData.nenemies);
-		fflush(stderr);
         processEnemy1(i);
     }
     for(int i=0;i<fixedData.nenemies;i++){
-		TRACE("READING ENEMY 2 %d %d\n",i,fixedData.nenemies);
-		fflush(stderr);
         processEnemy2(i);
     }
 
@@ -295,7 +288,6 @@ static bool doTurn(){
     }
 
     TRACE("POS: %d %d\n",game.currLoc.first,game.currLoc.second);
-	fflush(stderr);
     //actual ai starts here
     double survivalScore[7];
     memset(survivalScore,0,sizeof(double)*7);
@@ -303,8 +295,6 @@ static bool doTurn(){
 
 
     //TODO add points score
-	TRACE("HERE\n");
-	fflush(stderr);
     vector<state> states = pointsScore(3);
     //for(int i =1; i <states.size();i++)
 //	    survivalScore[states[i].first]+=100/states[i].depth*i;
@@ -312,12 +302,11 @@ static bool doTurn(){
    	//state s = states.size()-1; 
     state s= states.size()>1?states[1]:states[0];
     TRACE("State 1 DIST: %d\n",s.depth);
-   fflush(stderr);
      int sd = 1;
     for(int i =2; i <states.size();i++)
     {
 	    TRACE("STATE: %d DIST %d COST %d\n",i,states[i].depth,0);//states[i].cost);
-	    if(s.first==DIG_LEFT ||s.first==DIG_RIGHT){// || (states[i].depth-s.depth<10 && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
+	    if(states[i].depth-s.depth<10){// && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
 		    s = states[i];
 		    sd = i;
 	    }
@@ -363,7 +352,6 @@ static bool doTurn(){
     act(a);
     TRACE("TRACE: Turn #%d finished with action %s with a score of %f\n",game.currTurn,actionNames[a],maxScore);
 
-	fflush(stderr);
     return true;
 }
 

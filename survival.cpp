@@ -282,8 +282,6 @@ ChaseInfo computeChase(const World& world,int i){
 }
 
 static void stepEnemy(World * world, int i){
-                TRACE("IN STEP ENEMY %d %d\n",i, sizeof(int));
-	fflush(stderr);
     ChaseInfo info;
     info.target=NOONE;
     if(world->enemies[i].getSpawnDelay()==0){
@@ -313,40 +311,26 @@ static void stepEnemy(World * world, int i){
     }
     if(distSq(world->enemies[i].getLoc(),world->currLoc)<=64)
         info = computeChase(*world,i);
-                TRACE("HALF STEP ENEMY %d %d\n",i, sizeof(int));
-	fflush(stderr);
     Action move = NONE;
     switch(info.target){
     case RED:
     case BLUE:
-                TRACE("CASE RED OR BLUE ENEMY %d %d\n",i, sizeof(int));
-	fflush(stderr);
         move = info.startDir;
         world->enemies[i].chaseStack.push(move);
         break;
     case NOONE:
-                TRACE("CASE NONE %d %d\n",i, sizeof(int));
-	fflush(stderr);
         if(world->enemies[i].chaseStack.empty()){
-                TRACE("CHASE STACK EMPTY %d %d\n",i, world->enemies[i].patrolIndex);
-	fflush(stderr);
             move = world->enemies[i].info->program[world->enemies[i].patrolIndex];
-                TRACE("SET MOVE %d %d\n",i, sizeof(int));
-	fflush(stderr);
             world->enemies[i].patrolIndex++;
             world->enemies[i].patrolIndex%=world->enemies[i].info->program.size();
         }
         else{
-                TRACE("NOT EMPTY %d %d\n",i, sizeof(int));
-	fflush(stderr);
             move = world->enemies[i].chaseStack.peek();
             move = reverseAction(move);
             world->enemies[i].chaseStack.pop();
         }
         break;
     }
-                TRACE("END SWITCH %d %d\n",i, sizeof(int));
-	fflush(stderr);
     world->enemies[i].setLastMove(move);
     world->enemies[i].setLoc(simulateAction(*world,move,world->enemies[i].getLoc()));
     return;
@@ -358,14 +342,8 @@ PredictionState stateTransition(PredictionState start,Action act){
     ret.state = new World(*start.state);
     //*ret.state = *start.state;
     for(int i=0;i<fixedData.nenemies;i++){
-                TRACE("GOING THROUGH ENEMIES %d %d\n",i, fixedData.nenemies);
-	fflush(stderr);
         if(ret.state->enemies[i].isAlive() && !ret.state->enemies[i].isTrapped()){
-                TRACE("IN HERE en %d\n",i);
-	fflush(stderr);
             stepEnemy(ret.state,i);
-                TRACE("DONE STEP %d\n",i);
-	fflush(stderr);
             if(ret.state->enemies[i].getLoc()==ret.state->currLoc &&
                ret.state->enemies[i].getLastMove()==reverseAction(act) &&
                act!=NONE){
@@ -376,11 +354,7 @@ PredictionState stateTransition(PredictionState start,Action act){
                 ret.kills++;
         }
         else{
-                TRACE("DOWN HERE en %d\n",i);
-	fflush(stderr);
             stepEnemy(ret.state,i);
-                TRACE("DONE STEP %d\n",i);
-	fflush(stderr);
         }
     }
     for(int i=0;i<fixedData.nenemies;i++){
@@ -389,8 +363,6 @@ PredictionState stateTransition(PredictionState start,Action act){
             ret.state->map.lookup(loc)=FILLED_BRICK;
         }
     }
-                TRACE("UPDATE MAP\n");
-	fflush(stderr);
 
     //update map
     if(ret.state->isAlive()){
@@ -532,28 +504,17 @@ void predict(double *scores){
     //*start.state = game;
     start.state->enemyLoc = make_pair(-1,-1);
     todo.push(start);
-    TRACE("IN HERE\n");
-
-	fflush(stderr);
     while(!todo.empty()){
         PredictionState curr = todo.front();
         todo.pop();
-	TRACE("POP\n");
-	fflush(stderr);
         if(curr.depth<5){
             //only branch for states that have children we care about
             for(int i=NONE;i<7;i++){
-                TRACE("TRYING ACTION %d\n",i);
-	fflush(stderr);
 		    //if(curr.state->isSupported() && i==NONE){
                 //    continue;//helps reduce branching
                 //}
                 if(curr.state->canDoActionPlayer(static_cast<Action>(i))){
-                TRACE("CANDO ACTION %d\n",i);
-	fflush(stderr);
                     PredictionState newState = stateTransition(curr,static_cast<Action>(i));
-                TRACE("CREATED PREDICTION STATE ACTION %d\n",i);
-	fflush(stderr);
                     if(curr.depth==0){
                         newState.startDir=static_cast<Action>(i);
                     }
@@ -564,8 +525,6 @@ void predict(double *scores){
                         delete newState.state;
                     }
                 }
-		TRACE("DONE TRYING\n");
-	fflush(stderr);
 
             }
         }
@@ -585,7 +544,6 @@ void predict(double *scores){
     }
     for(int i=0;i<7;i++){
         TRACE("DEPTH: %d KILLS: %d GOLD %d\n",best[i].depth,best[i].kills,best[i].gold);
-	fflush(stderr);
         //if(best[i].state!=NULL)
             //TRACE("LOC: %hhd %hhd\n",best[i].state->currLoc.first,best[i].state->currLoc.second);
         scores[i] = scoreState(best[i]);

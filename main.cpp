@@ -89,6 +89,7 @@ static inline void initGame(){
         game.enemies[i].setIsTrapped(false);
         game.enemies[i].setSpawnDelay(0);
         game.enemies[i].setChaseState(PATROL);
+        game.enemies[i].patrolIndex = 0;
     }
     game.currTurn = -1;
     currScore = 0;

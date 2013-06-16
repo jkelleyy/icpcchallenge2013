@@ -470,9 +470,9 @@ double scoreState(PredictionState state){
     //TODO
     double score = 0;
     if(state.depth>0 && state.state!=NULL){
-        score = (10*exp(state.depth)-20) + 20*state.kills + 10*state.gold + .5*findSpace(state.state);
+        score = (10*exp(state.depth)-20) + 20*state.kills + 5*state.gold + .5*findSpace(state.state);
         if(checkBounds(game.currLoc) && checkBounds(state.state->currLoc)){
-            score += .1*sqrt(distSq(state.state->currLoc,game.currLoc));
+            score += .1*min(sqrt(distSq(state.state->currLoc,game.currLoc)),5.0);
             if(component[game.currLoc.first][game.currLoc.second]==component[state.state->currLoc.first][state.state->currLoc.second])
                 score += 2;
         }
@@ -529,7 +529,15 @@ void predict(double *scores){
             }
         }
         if(curr.startDir!=NONE){
-            if(scoreState(curr)>scoreState(best[curr.startDir])){
+            while(!curr.state->isSupported() && curr.state->isAlive()){
+                PredictionState temp = stateTransition(curr,NONE);
+                temp.depth--;
+                delete curr.state;
+                curr = temp;
+            }
+
+            if(curr.state->isAlive() &&
+               scoreState(curr)>scoreState(best[curr.startDir])){
                 if(best[curr.startDir].state)
                     delete best[curr.startDir].state;
                 best[curr.startDir] = curr;

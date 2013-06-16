@@ -45,10 +45,18 @@ static inline void initGame(){
     ourLastMove = NONE;
     scanf(" %d\n",&fixedData.nrounds);
     readMap();
-    scanf(" %hhd %hhd ",&game.currLoc.first,&game.currLoc.second);
+    int loc_first,loc_second;
+    //portability
+    scanf(" %d %d ",&loc_first,&loc_second);
+    game.currLoc.first = loc_first;
+    game.currLoc.second = loc_second;
+    //scanf(" %hhd %hhd ",&game.currLoc.first,&game.currLoc.second);
     fixedData.ourSpawn = game.currLoc;
     game.brickDelay = 0;
-    scanf(" %hhd %hhd ",&game.enemyLoc.first,&game.enemyLoc.second);
+    scanf(" %d %d ",&loc_first,&loc_second);
+    game.enemyLoc.first = loc_first;
+    game.enemyLoc.second = loc_second;
+    //scanf(" %hhd %hhd ",&game.enemyLoc.first,&game.enemyLoc.second);
     fixedData.enemySpawn = game.enemyLoc;
     game.enemySpawnDelay = 0;
     game.enemyBrickDelay = 0;
@@ -57,7 +65,9 @@ static inline void initGame(){
     for(int i=0;i<fixedData.nenemies;i++){
         SharedEnemyInfo* sinfo = new SharedEnemyInfo;
         game.enemies[i].info = sinfo;
-        scanf(" %hhd %hhd %s",&sinfo->spawn.first,&sinfo->spawn.second,tempBuffer);
+        scanf(" %d %d %s",&loc_first,&loc_second,tempBuffer);
+        sinfo->spawn.first = loc_first;
+        sinfo->spawn.second = loc_second;
         game.enemies[i].setLoc(game.enemies[i].info->spawn);
         sinfo->program.resize(strlen(tempBuffer));
         for(int j=0;j<game.enemies[i].info->program.size();j++){
@@ -107,7 +117,10 @@ static void processEnemy1(int i){
     loc_t oldLoc = game.enemies[i].getLoc();
     loc_t newLoc;
     int master;
-    scanf(" %hhd %hhd %d",&newLoc.first,&newLoc.second,&master);
+    int loc_first,loc_second;
+    scanf(" %d %d %d",&loc_first,&loc_second,&master);
+    newLoc.first = loc_first;
+    newLoc.second = loc_second;
     game.enemies[i].setLoc(newLoc);
     game.enemies[i].setMaster(static_cast<Player>(master));
     if(newLoc.first!=-1 && oldLoc.first!=-1 && oldLoc!=newLoc){
@@ -228,9 +241,16 @@ static bool doTurn(){
     readMap();
 
 	//setSquareDelays();
-
-    scanf(" %hhd %hhd %d %hhd",&game.currLoc.first,&game.currLoc.second,&currScore,&game.brickDelay);
-    scanf(" %hhd %hhd %d %hhd",&game.enemyLoc.first,&game.enemyLoc.second,&enemyScore,&game.enemyBrickDelay);
+    int temp;
+    int loc_first,loc_second;
+    scanf(" %d %d %d %d",&loc_first,&loc_second,&currScore,&temp);
+    game.currLoc.first = loc_first;
+    game.currLoc.second = loc_second;
+    game.brickDelay = temp;
+    scanf(" %d %d %d %d",&loc_first,&loc_second,&enemyScore,&temp);
+    game.enemyLoc.first = loc_first;
+    game.enemyLoc.second = loc_second;
+    game.enemyBrickDelay = temp;
     if(game.enemyLoc.first==-1){
         if(game.enemySpawnDelay==0){
             game.enemySpawnDelay = max(49-game.missedTurns,1);

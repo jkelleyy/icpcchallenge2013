@@ -295,7 +295,7 @@ static bool doTurn(){
 
 
     //TODO add points score
-    vector<state> states = pointsScore(3);
+    vector<state> states = pointsScore(5);
     //for(int i =1; i <states.size();i++)
 //	    survivalScore[states[i].first]+=100/states[i].depth*i;
 

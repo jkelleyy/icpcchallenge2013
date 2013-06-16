@@ -147,7 +147,7 @@ vector<state> pointsScore(int desiredGold){
 		if(!newState.us && w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
 		{
 			w.map.lookup(cur.first,cur.second) = EMPTY;
-			w.timeout[cur.first][cur.second] = opTime;
+			w.timeout[cur.first][cur.second] += opTime;
 			
 		}
 		if(newState.us && w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))

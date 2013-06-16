@@ -472,9 +472,13 @@ double scoreState(PredictionState state){
     double score = 0;
     if(state.depth>0 && state.state!=NULL){
         score = (10*exp(state.depth)-20) + 20*state.kills + 10*state.gold + .5*findSpace(state.state);
-        if(checkBounds(game.currLoc) && checkBounds(state.state->currLoc))
+        if(checkBounds(game.currLoc) && checkBounds(state.state->currLoc)){
             score += .1*sqrt(distSq(state.state->currLoc,game.currLoc));
+            if(component[game.currLoc.first][game.currLoc.second]==component[state.state->currLoc.first][state.state->currLoc.second])
+                score += 2;
+        }
         score += angleScore(ourLastMove,state.startDir);
+
     }
     else
         score = -100000;

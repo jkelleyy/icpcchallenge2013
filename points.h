@@ -6,20 +6,19 @@
 
 struct dugCell
 {
-	pair<int,int> loc;
+	loc_t loc;
 	int timeDug;
 };
 
 struct state
 {
 	Action first;
-	pair<int,int> pos;
+	loc_t pos;
 	int depth;
 	int numGold;
 	long long goldNumber;
 	int digDelay;
 	vector<dugCell> dugCells;
-	int cost;
 };
 
 //finds the action which gets you closest to a gold

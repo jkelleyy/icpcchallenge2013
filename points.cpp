@@ -1,12 +1,12 @@
 #include "game_state.h"
 #include "points.h"
+#include "map_component.h"
 #include "util.h"
 
 #include <queue>
 
 using namespace std;
 
-typedef pair<int,int> loc;
 //The number of gold pieces you can look for, max
 const int maxGold = 10;
 
@@ -14,51 +14,54 @@ typedef long long ll;
 ll visited[16][26];
 //InitialGoldNumbers
 ll goldNumber[16][26];
-char mapCopy[16][26];
-World w;
+COWMap<16,25> mapCopy;
+PointsWorld w;
 ll digLeft = ((ll)1)<<63;
 ll digRight = ((ll)1)<<62;
 
-void updateDelay(World& w)
+void updateDelay(PointsWorld& w)
 {
 	for(int i =0; i<16; i++)
 		for(int j = 0; j <25; j++)
 		{
 			if(w.timeout[i][j]==1)
-				w.map[i][j]=originalMap[i][j];
+				w.map.lookup(i,j)=originalMap[i][j];
 			if(w.timeout[i][j]>0)
 				w.timeout[i][j]--;
 		}
 }
 
-void updateMapCopy(World& w)
+void updateMapCopy(PointsWorld& w)
 {
-			for(int i =0; i<16; i++)
-				for(int j = 0; j <25; j++)
-					mapCopy[i][j] = w.map[i][j];
+    mapCopy = w.map;
+    //for(int i =0; i<16; i++)
+    //for(int j = 0; j <25; j++)
+    //mapCopy[i][j] = w.checkMapRaw(i,j);
 }
 
-void restoreMapCopy(World& w)
+void restoreMapCopy(PointsWorld& w)
 {
-			for(int i =0; i<16; i++)
-				for(int j = 0; j <25; j++)
-					w.map[i][j] = mapCopy[i][j];
+    w.map = mapCopy;
+    //for(int i =0; i<16; i++)
+    //for(int j = 0; j <25; j++)
+    //w.map.lookup(i,j) = mapCopy[i][j];
 }
 
-void changeMap(World& w, vector<dugCell> dugCells)
+void changeMap(PointsWorld& w, vector<dugCell> dugCells)
 {
 	for(int i =0; i <dugCells.size();i++)
 	{
 		if(w.currTurn-dugCells[i].timeDug<=25)
 		{
 			//TRACE("DUG AT: %d %d %d\n",dugCells[i].loc.first,dugCells[i].loc.second,dugCells[i].timeDug);
-			w.map[(dugCells[i]).loc.first][(dugCells[i]).loc.second] = REMOVED_BRICK;
+			w.map.lookup((dugCells[i]).loc.first,(dugCells[i]).loc.second) = REMOVED_BRICK;
 		}
 	}
 }
 
 
 vector<state> pointsScore(int desiredGold){
+	
 	int turnNo = game.currTurn;
 	desiredGold = desiredGold>maxGold?maxGold:desiredGold;
 
@@ -66,7 +69,7 @@ vector<state> pointsScore(int desiredGold){
 	for(int i =0; i<16; i++)
 		for(int j = 0; j <25; j++)
 		{
-			w.map[i][j] = game.map[i][j];
+			w.map.lookup(i,j) = game.checkMapRaw(i,j);
 			w.timeout[i][j] = game.timeout[i][j];
 		}
 	w.currTurn = game.currTurn;
@@ -77,7 +80,7 @@ vector<state> pointsScore(int desiredGold){
 		int goldSoFar = 1;
 		for(int i =0; i<16; i++)
 			for(int j = 0; j <25; j++)
-				if(map[i][j]==GOLD){
+				if(game.checkMapRaw(i,j)==GOLD){
 					goldNumber[i][j] = 1<<goldSoFar;
 					goldSoFar++;
 					goldSoFar%=61;
@@ -86,18 +89,17 @@ vector<state> pointsScore(int desiredGold){
 
 	queue<state> q;
 	state currState;
-	currState.pos = currLoc;
+	currState.pos = game.currLoc;
 	currState.first = NONE;
 	currState.depth = 0;
 	currState.goldNumber = 1;
 	currState.numGold = 0;
 	currState.digDelay = game.brickDelay;
-	currState.cost = 0;
 	//The best state to get X pieces of gold (X is index)
 	vector<state> best;
 	best.push_back(currState);
 
-	if(!isAlive())
+	if(!game.isAlive())
 		return best;
 	for(int i =0; i<16; i++)
 		for(int j = 0; j <25; j++)
@@ -108,13 +110,9 @@ vector<state> pointsScore(int desiredGold){
 
 	int lastDepthSeen = 0;
 
-	ll iter = 0;
-	ll MAX_ITER = 6000;
-	while(!q.empty() && iter < MAX_ITER){
-		iter++;
-		//TRACE("ITER: %ld\n",iter);
+	while(!q.empty()){
 		state newState = q.front();q.pop();
-		loc cur = newState.pos;
+		loc_t cur = newState.pos;
 		if(newState.depth > lastDepthSeen)
 		{
 			lastDepthSeen++;
@@ -125,30 +123,28 @@ vector<state> pointsScore(int desiredGold){
 
 		changeMap(w, newState.dugCells);
 
-		if(w.map[cur.first][cur.second]==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
+		if(w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
 		{
 			//TRACE("NUMGOLD %d\n",newState.numGold);
 			//TRACE("GOLDNUM %lld\n",newState.goldNumber);
 			newState.numGold++;
 			newState.goldNumber |= goldNumber[cur.first][cur.second];
-			if(newState.numGold==(desiredGold+1))
+			if(newState.numGold==desiredGold)
 			{
 				best.push_back(newState);
 				return best;
 			}
 			else if (best.size()<=newState.numGold)
 				best.push_back(newState);
-			else if (best[newState.numGold].cost>newState.cost)
-				best[newState.numGold] = newState;
 		}
 
 
 		for(int i=NONE; i<7;i++){
 			Action a = static_cast<Action>(i);
 			if(w.canDoActionPlayer(a,cur,newState.digDelay)){
-				loc alteredLoc = simulateAction(a,cur);
-				if(a==DIG_LEFT || a==DIG_RIGHT)
-					TRACE("Consid Might digg!\n");
+				loc_t alteredLoc = simulateAction(a,cur);
+				//if(a==DIG_LEFT || a==DIG_RIGHT)
+				//	TRACE("Consid Might digg!\n");
 				ll newGoldNum  = newState.goldNumber;
 				if(a==DIG_LEFT)
 					newGoldNum  |= digLeft;
@@ -162,45 +158,6 @@ vector<state> pointsScore(int desiredGold){
 					alteredState.goldNumber = newGoldNum;
 					alteredState.numGold = newState.numGold;
 					alteredState.dugCells = newState.dugCells;
-					alteredState.cost = newState.cost;
-
-					
-    					for(int j=0;j<nenemies;j++)
-					{
-						pair<int,int>  eloc = enemies[j].loc;
-						if(eloc.first==alteredState.pos.first && eloc.second==alteredState.pos.second)
-							alteredState.cost+=2;
-
-					}
-
-					if(actions.size()>0 && alteredState.depth==1)
-					{
-						Action prev = actions[actions.size()-1];
-						if(prev==TOP && a==BOTTOM)
-							alteredState.cost++;
-						else if(prev==BOTTOM && a==TOP)
-							alteredState.cost++;
-						else if(prev==LEFT && a==RIGHT)
-							alteredState.cost++;
-						else if(prev==RIGHT && a==LEFT)
-							alteredState.cost++;
-						if(a==DIG_LEFT || a==DIG_RIGHT)
-							alteredState.cost=-40;
-					}
-					/*
-					int turnB = max(0,actions.size()-5);
-					for(int j = turnB; j <actions.size();j++)
-					{
-						int r = rlocs[j];
-						int c = clocs[j];
-						Action took = actions[j];
-						if(alteredLoc.first==r && alteredLoc.second==c)
-						{
-							if(
-							//alteredState.cost++;
-							//TRACE("ADDING EXTRA COST\n");
-						}
-					}*/
 
 					visited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
 

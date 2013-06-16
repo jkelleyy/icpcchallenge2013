@@ -91,6 +91,15 @@ struct SharedEnemyInfo{
 
 class World;
 
+
+static inline bool checkBounds(int r, int c){
+    return r>=0 && r<16 && c>=0 && c<25;
+}
+static inline bool checkBounds(const loc_t& loc){
+    return checkBounds(loc.first,loc.second);
+}
+
+
 struct EnemyInfo{
     const SharedEnemyInfo* info;
     const World *env;
@@ -144,7 +153,7 @@ struct EnemyInfo{
         SET_VAL(CHASE_STATE,s);
     }
     inline bool isAlive() const{
-        return getLoc().first!=-1;
+        return checkBounds(getLoc());
     }
 #undef GET_VAL
 #undef SET_VAL
@@ -257,14 +266,8 @@ public:
 //moved here since no one actually cares about these values
 extern int enemyScore;
 extern int currScore;
+extern Action ourLastMove;
 
-
-static inline bool checkBounds(int r, int c){
-    return r>=0 && r<16 && c>=0 && c<25;
-}
-static inline bool checkBounds(const loc_t& loc){
-    return checkBounds(loc.first,loc.second);
-}
 
 static inline char checkBaseMapSafe(int r,int c){
     if(checkBounds(r,c))

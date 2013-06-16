@@ -141,6 +141,7 @@ static inline void saveFirstMap()
 }
 
 static inline void initGame(){
+    ourLastMove = NONE;
     scanf(" %d\n",&fixedData.nrounds);
     readMap();
     scanf(" %hhd %hhd ",&game.currLoc.first,&game.currLoc.second);
@@ -361,8 +362,8 @@ static bool doTurn(){
     TRACE("POS: %d %d\n",game.currLoc.first,game.currLoc.second);
 
     //actual ai starts here
-    int survivalScore[7];
-    memset(survivalScore,0,sizeof(int)*7);
+    double survivalScore[7];
+    memset(survivalScore,0,sizeof(double)*7);
     predict(survivalScore);
 
 
@@ -401,7 +402,7 @@ static bool doTurn(){
         survivalScore[s.first]+=50;
 
     vector<Action> bests;
-    int maxScore = 0;
+    double maxScore = 0;
     for(int i=NONE;i<7;i++){
         if(survivalScore[i]>maxScore){
             maxScore = survivalScore[i];
@@ -421,8 +422,9 @@ static bool doTurn(){
         }
         TRACE("\n");
     }
+    ourLastMove = a;
     act(a);
-    TRACE("TRACE: Turn #%d finished with action %s with a score of %d\n",game.currTurn,actionNames[a],maxScore);
+    TRACE("TRACE: Turn #%d finished with action %s with a score of %f\n",game.currTurn,actionNames[a],maxScore);
 
     return true;
 }

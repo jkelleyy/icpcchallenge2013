@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void predict(int *scores);
+void predict(double *scores);
 
 ChaseInfo computeChase(const World&,int enemyId);
 

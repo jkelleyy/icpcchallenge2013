@@ -6,6 +6,7 @@ PointsWorld game;
 
 int enemyScore;
 int currScore;
+Action ourLastMove;
 
 //char originalMap[16][26];
 bool reachable[16][26][16][26];

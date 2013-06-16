@@ -21,7 +21,7 @@ ll digRight = ((ll)1)<<62;
 void updateDelay(PointsWorld& w)
 {
 	for(int i =0; i<16; i++)
-		for(int j = 0; j <26; j++)
+		for(int j = 0; j <25; j++)
 		{
 			if(w.timeout[i][j]==1)
 				w.map.lookup(i,j)=originalMap[i][j];

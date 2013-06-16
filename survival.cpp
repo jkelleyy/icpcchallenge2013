@@ -65,6 +65,10 @@ static inline loc_t moveDir(const loc_t& curr,Action act){
 int enemyDistCache[16][25][16][25];
 //return -1 for "infinite" distance
 int checkEnemyDist(loc_t enemyLoc, loc_t loc){
+    if(!checkBounds(enemyLoc) || !checkBounds(loc)){
+        TRACE("BAD: %hhd %hhd %hhd %hhd\n",enemyLoc.first,enemyLoc.second,loc.first,loc.second);
+        return -1;
+    }
     int& val = enemyDistCache[enemyLoc.first][enemyLoc.second][loc.first][loc.second];
     if(enemyLoc==loc)
         return 0;
@@ -167,7 +171,7 @@ ChaseInfo computeChase(const World& world,int i){
     else
         ourDist = -1;
     int oppDist;
-    if(world.enemyLoc.first==-1)
+    if(world.enemyLoc.first!=-1)
         oppDist = checkEnemyDist(world.enemies[i].getLoc(),world.enemyLoc);
     else
         oppDist = -1;
@@ -288,8 +292,18 @@ static void stepEnemy(World * world, int i){
     else{
         world->enemies[i].setSpawnDelay(world->enemies[i].getSpawnDelay()-1);
     }
+    if(world->enemies[i].isTrapped()){
+        return;
+    }
     if(world->enemies[i].isFalling()){
         world->enemies[i].setLastMove(BOTTOM);
+        loc_t curr = world->enemies[i].getLoc();
+        curr.first++;
+        world->enemies[i].setLoc(curr);
+        if(checkBaseMapSafe(curr)==BRICK){
+            world->enemies[i].setIsTrapped(true);
+        }
+        return;
     }
     else if(world->enemies[i].didMove()){
         world->enemies[i].setLastMove(NONE);
@@ -312,6 +326,7 @@ static void stepEnemy(World * world, int i){
         }
         else{
             move = world->enemies[i].chaseStack.peek();
+            move = reverseAction(move);
             world->enemies[i].chaseStack.pop();
         }
         break;
@@ -338,6 +353,15 @@ PredictionState stateTransition(PredictionState start,Action act){
             if(ret.state->enemies[i].isTrapped())
                 ret.kills++;
         }
+        else{
+            stepEnemy(ret.state,i);
+        }
+    }
+    for(int i=0;i<fixedData.nenemies;i++){
+        loc_t loc = ret.state->enemies[i].getLoc();
+        if(checkBaseMapSafe(loc)==BRICK){
+            ret.state->map.lookup(loc)=FILLED_BRICK;
+        }
     }
 
 
@@ -347,9 +371,11 @@ PredictionState stateTransition(PredictionState start,Action act){
         switch(act){
         case DIG_LEFT:
             ret.state->map.lookup(ret.state->currLoc.first+1,ret.state->currLoc.second-1) = REMOVED_BRICK;
+            ret.state->brickDelay = 10;
             break;
         case DIG_RIGHT:
             ret.state->map.lookup(ret.state->currLoc.first+1,ret.state->currLoc.second+1) = REMOVED_BRICK;
+            ret.state->brickDelay = 10;
             break;
         }
     }
@@ -381,20 +407,77 @@ PredictionState stateTransition(PredictionState start,Action act){
 #define COIN_FUNC(val)
 #define ENEMY_DIST_FUNC(val)
 
-
-int scoreState(PredictionState state){
-    //TODO
-    if(state.depth>0)
-        return 50*state.depth;
-    else
-        return -100;
+static int findSpace(World* w){
+    set<loc_t> badSet;
+    for(int i=0;i<fixedData.nenemies;i++)
+        badSet.insert(w->enemies[i].getLoc());
+    set<loc_t> seen;
+    queue<loc_t> todo;
+    todo.push(w->currLoc);
+    seen.insert(w->currLoc);
+    while(!todo.empty()){
+        if(seen.size()>10)
+            return 10;
+        loc_t curr = todo.front();
+        todo.pop();
+        if(w->canDoActionPlayer(LEFT,curr)){
+            loc_t next = simulateAction(LEFT,curr);
+            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+        if(w->canDoActionPlayer(RIGHT,curr)){
+            loc_t next = simulateAction(RIGHT,curr);
+            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+        if(w->canDoActionPlayer(TOP,curr)){
+            loc_t next = simulateAction(TOP,curr);
+            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+        if(w->canDoActionPlayer(BOTTOM,curr)){
+            loc_t next = simulateAction(BOTTOM,curr);
+            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+                todo.push(next);
+                seen.insert(next);
+            }
+        }
+    }
+    return seen.size();
 }
 
-//a list of valid actions in order of preference
-//and a "score"
-//note, normally the score is monotoic, but that's not a strict requirement
-//we prefer non-death paths, but sometimes the score is higher on a death path
-void predict(int *scores){
+
+double angleScore(Action a, Action b){
+    if(a==b)
+        return 1;
+    if(a==reverseAction(b))
+        return 0;
+    if(a==NONE)
+        return .25;
+    return .5;
+}
+
+double scoreState(PredictionState state){
+    //TODO
+    double score = 0;
+    if(state.depth>0 && state.state!=NULL){
+        score = (10*exp(state.depth)-20) + 5*state.kills + 10*state.gold + .5*findSpace(state.state);
+        if(checkBounds(game.currLoc) && checkBounds(state.state->currLoc))
+            score += .1*sqrt(distSq(state.state->currLoc,game.currLoc));
+        score += angleScore(ourLastMove,state.startDir);
+    }
+    else
+        score = -100000;
+    return score;
+}
+
+void predict(double *scores){
     //true if there is a completely safe path out using this move
     PredictionState best[7];
     queue<PredictionState> todo;
@@ -410,14 +493,14 @@ void predict(int *scores){
     start.kills = 0;
     start.depth = 0;
     start.startDir = NONE;
-    start.state = new World;
-    *start.state = game;
+    start.state = new World(game);
+    //*start.state = game;
     start.state->enemyLoc = make_pair(-1,-1);
     todo.push(start);
     while(!todo.empty()){
         PredictionState curr = todo.front();
         todo.pop();
-        if(curr.depth>3){
+        if(curr.depth>5){
             delete curr.state;
             while(!todo.empty()){
                 delete todo.front().state;
@@ -426,6 +509,9 @@ void predict(int *scores){
             break;
         }
         for(int i=NONE;i<7;i++){
+            //if(curr.state->isSupported() && i==NONE){
+            //    continue;//helps reduce branching
+            //}
             if(curr.state->canDoActionPlayer(static_cast<Action>(i))){
                 PredictionState newState = stateTransition(curr,static_cast<Action>(i));
                 if(curr.depth==0){
@@ -440,17 +526,7 @@ void predict(int *scores){
         }
         if(curr.startDir!=NONE){
             //TODO prevent memleak
-            if(curr.depth>best[curr.startDir].depth){
-                if(best[curr.startDir].state)
-                    delete best[curr.startDir].state;
-                best[curr.startDir] = curr;
-            }
-            else if (curr.kills>best[curr.startDir].kills){
-                if(best[curr.startDir].state)
-                    delete best[curr.startDir].state;
-                best[curr.startDir] = curr;
-            }
-            else if (curr.gold>best[curr.startDir].gold){
+            if(scoreState(curr)>scoreState(best[curr.startDir])){
                 if(best[curr.startDir].state)
                     delete best[curr.startDir].state;
                 best[curr.startDir] = curr;
@@ -464,13 +540,13 @@ void predict(int *scores){
         }
     }
     for(int i=0;i<7;i++){
-        TRACE("DEPTH: %d\n",best[i].depth);
+        TRACE("DEPTH: %d KILLS: %d GOLD %d\n",best[i].depth,best[i].kills,best[i].gold);
         scores[i] = scoreState(best[i]);
         if(best[i].state!=NULL)
             delete best[i].state;
     }
     for(int i=0;i<7;i++){
-        TRACE("SCORE: %s %d\n",actionNames[i],scores[i]);
+        TRACE("SCORE: %s %f\n",actionNames[i],scores[i]);
     }
 }
 

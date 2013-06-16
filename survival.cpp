@@ -1,6 +1,7 @@
 #include "survival.h"
 
 #include "game_state.h"
+#include "map_component.h"
 #include "util.h"
 #include <queue>
 #include <set>
@@ -311,7 +312,7 @@ static void stepEnemy(World * world, int i){
     }
     if(distSq(world->enemies[i].getLoc(),world->currLoc)<=64)
         info = computeChase(*world,i);
-    Action move;
+    Action move = NONE;
     switch(info.target){
     case RED:
     case BLUE:
@@ -332,15 +333,15 @@ static void stepEnemy(World * world, int i){
         break;
     }
     world->enemies[i].setLastMove(move);
-    world->enemies[i].setLoc(simulateAction(move,world->enemies[i].getLoc()));
+    world->enemies[i].setLoc(simulateAction(*world,move,world->enemies[i].getLoc()));
     return;
 }
 
 PredictionState stateTransition(PredictionState start,Action act){
     PredictionState ret = start;
     ret.depth++;
-    ret.state = new World;
-    *ret.state = *start.state;
+    ret.state = new World(*start.state);
+    //*ret.state = *start.state;
     for(int i=0;i<fixedData.nenemies;i++){
         if(ret.state->enemies[i].isAlive() && !ret.state->enemies[i].isTrapped()){
             stepEnemy(ret.state,i);
@@ -367,7 +368,7 @@ PredictionState stateTransition(PredictionState start,Action act){
 
     //update map
     if(ret.state->isAlive()){
-        ret.state->currLoc = simulateAction(act,ret.state->currLoc);
+
         switch(act){
         case DIG_LEFT:
             ret.state->map.lookup(ret.state->currLoc.first+1,ret.state->currLoc.second-1) = REMOVED_BRICK;
@@ -377,6 +378,8 @@ PredictionState stateTransition(PredictionState start,Action act){
             ret.state->map.lookup(ret.state->currLoc.first+1,ret.state->currLoc.second+1) = REMOVED_BRICK;
             ret.state->brickDelay = 10;
             break;
+        default:
+            ret.state->currLoc = simulateAction(*ret.state,act,ret.state->currLoc);
         }
     }
     //note, I'm not going to bother with restoring bricks and gold since the
@@ -393,9 +396,9 @@ PredictionState stateTransition(PredictionState start,Action act){
     if(ret.state->brickDelay!=0)
         ret.state->brickDelay--;
     if(ret.state->checkMapSafe(ret.state->currLoc)==REMOVED_BRICK &&
-       isSolid(ret.state->checkMapSafe(ret.state->currLoc.first+1,ret.state->currLoc.second)) &&
-       isSolid(checkBaseMapSafe(ret.state->currLoc.first,ret.state->currLoc.second+1)) &&
-       isSolid(checkBaseMapSafe(ret.state->currLoc.first,ret.state->currLoc.second-1))){
+       isImpassable(ret.state->checkMapSafe(ret.state->currLoc.first+1,ret.state->currLoc.second)) &&
+       isImpassable(checkBaseMapSafe(ret.state->currLoc.first,ret.state->currLoc.second+1)) &&
+       isImpassable(checkBaseMapSafe(ret.state->currLoc.first,ret.state->currLoc.second-1))){
         //effectively dead
         ret.state->currLoc = make_pair(-1,-1);
     }
@@ -421,28 +424,28 @@ static int findSpace(World* w){
         loc_t curr = todo.front();
         todo.pop();
         if(w->canDoActionPlayer(LEFT,curr)){
-            loc_t next = simulateAction(LEFT,curr);
+            loc_t next = simulateAction(*w,LEFT,curr);
             if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
                 todo.push(next);
                 seen.insert(next);
             }
         }
         if(w->canDoActionPlayer(RIGHT,curr)){
-            loc_t next = simulateAction(RIGHT,curr);
+            loc_t next = simulateAction(*w,RIGHT,curr);
             if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
                 todo.push(next);
                 seen.insert(next);
             }
         }
         if(w->canDoActionPlayer(TOP,curr)){
-            loc_t next = simulateAction(TOP,curr);
+            loc_t next = simulateAction(*w,TOP,curr);
             if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
                 todo.push(next);
                 seen.insert(next);
             }
         }
         if(w->canDoActionPlayer(BOTTOM,curr)){
-            loc_t next = simulateAction(BOTTOM,curr);
+            loc_t next = simulateAction(*w,BOTTOM,curr);
             if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
                 todo.push(next);
                 seen.insert(next);
@@ -451,7 +454,6 @@ static int findSpace(World* w){
     }
     return seen.size();
 }
-
 
 double angleScore(Action a, Action b){
     if(a==b)
@@ -467,7 +469,7 @@ double scoreState(PredictionState state){
     //TODO
     double score = 0;
     if(state.depth>0 && state.state!=NULL){
-        score = (10*exp(state.depth)-20) + 5*state.kills + 10*state.gold + .5*findSpace(state.state);
+        score = (10*exp(state.depth)-20) + 20*state.kills + 10*state.gold + .5*findSpace(state.state);
         if(checkBounds(game.currLoc) && checkBounds(state.state->currLoc))
             score += .1*sqrt(distSq(state.state->currLoc,game.currLoc));
         score += angleScore(ourLastMove,state.startDir);
@@ -517,8 +519,9 @@ void predict(double *scores){
                 if(curr.depth==0){
                     newState.startDir=static_cast<Action>(i);
                 }
-                if(curr.state->isAlive())
+                if(newState.state->isAlive()){
                     todo.push(newState);
+                }
                 else{
                     delete newState.state;
                 }
@@ -541,6 +544,8 @@ void predict(double *scores){
     }
     for(int i=0;i<7;i++){
         TRACE("DEPTH: %d KILLS: %d GOLD %d\n",best[i].depth,best[i].kills,best[i].gold);
+        if(best[i].state!=NULL)
+            TRACE("LOC: %hhd %hhd\n",best[i].state->currLoc.first,best[i].state->currLoc.second);
         scores[i] = scoreState(best[i]);
         if(best[i].state!=NULL)
             delete best[i].state;

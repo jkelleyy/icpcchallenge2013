@@ -4,6 +4,7 @@
 #include "points.h"
 #include "survival.h"
 #include "points.h"
+#include "map_component.h"
 #include <string>
 #include <vector>
 #include <cstdio>
@@ -31,106 +32,6 @@ static inline void readMap(){
 }
 
 static char tempBuffer[1000];
-
-static inline void printReachableMatrix(int starti, int startj)
-{
-	TRACE("Reachable matrix:\n");
-	for(int i = 0; i < 16; i++)
-	{
-		TRACE("reachable ");
-		for(int j = 0; j < 25; j++)
-			if(reachable[starti][startj][i][j])
-				TRACE("1 ");
-			else
-				TRACE("0 ");
-		TRACE("\n");
-	}
-}
-
-static inline void printComponentMatrix()
-{
-	TRACE("Component matrix:\n");
-	for(int i = 0; i < 16; i++)
-	{
-		TRACE("comp ");
-		for(int j = 0; j < 25; j++)
-			TRACE("%2d ", component[i][j]);
-		TRACE("\n");
-	}
-}
-
-static inline void dfs(loc_t start, loc_t curr)
-{
-	if(reachable[start.first][start.second][curr.first][curr.second])
-		return;
-	reachable[start.first][start.second][curr.first][curr.second] = true;
-
-	for(int i = 0; i < 7; i++)
-		if(canDoAction2(static_cast<Action>(i), curr))
-			dfs(start, simulateAction(static_cast<Action>(i), curr));
-
-	return;
-}
-
-static inline void computeAllWayReachability()
-{
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 25; j++)
-			for(int ii = 0; ii < 16; ii++)
-				for(int jj = 0; jj < 25; jj++)
-					reachable[i][j][ii][jj] = false;
-
-	for(int i = 0; i < 16; i++)
-	{
-		for(int j = 0; j < 25; j++)
-		{
-			loc_t start = make_pair(i, j);
-			dfs(start, start);
-		}
-	}
-}
-
-static inline void assignComponents()
-{
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 25; j++)
-			component[i][j] = -1;
-
-	int comp = 0;
-	for(int i = 0; i < 16; i++)
-	{
-		for(int j = 0; j < 25; j++)
-		{
-			if(component[i][j] == -1)
-				component[i][j] = comp++;
-			for(int ii = 0; ii < 16; ii++)
-				for(int jj = 0; jj < 25; jj++)
-					if((reachable[i][j][ii][jj]) && (reachable[ii][jj][i][j]))
-						component[ii][jj] = component[i][j];
-		}
-	}
-}
-
-static inline void findGoldInComponents()
-{
-	for(int i = 0; i < 600; i++)
-		gold_comp[i] = 0;
-
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 25; j++)
-			if(component[i][j] != -1)
-				if(game.checkMapRaw(i,j) == GOLD)
-					gold_comp[component[i][j]]++;
-}
-
-static inline void findTotalGoldInMap()
-{
-	totalGoldOnMap = 0;
-	for(int i = 0; i < 16; i++)
-		for(int j = 0; j < 25; j++)
-			if(game.checkMapRaw(i,j) == GOLD)
-				totalGoldOnMap++;
-}
 
 static inline void saveFirstMap()
 {
@@ -368,13 +269,6 @@ static bool doTurn(){
 
 
     //TODO add points score
-    bool hasChaser = false;
-    for(int i=0;i<fixedData.nenemies;i++){
-        //if(game.enemies[i].getChaseState()==CHASE_RED && game.enemies[i].chaseInfo.pathLength<5){
-        //    hasChaser = true;
-        //    break;
-        //}
-    }
 
     vector<state> states = pointsScore(5);
     state s= states.size()>1?states[1]:states[0];
@@ -382,34 +276,28 @@ static bool doTurn(){
     for(int i =2; i <states.size();i++)
     {
 	    TRACE("STATE: %d DIST %d\n",i,states[i].depth);
-        if((s.first==DIG_LEFT || s.first==DIG_RIGHT) && hasChaser){
-            s = states[i];
-        }
-	    else if(states[i].depth-states[i-1].depth<=5)
+	    if(states[i].depth-states[i-1].depth<=5)
 		    s = states[i];
 	    else
 		    break;
 
     }
-    if(s.first==DIG_LEFT || s.first==DIG_RIGHT){
+    if(s.first==DIG_LEFT || s.first==DIG_RIGHT)
 	    TRACE("ORDERED TO DIG!\n");
-        if(hasChaser){
-            s.first = NONE;
-        }
-    }
-    TRACE("TRACE: Action: %s pos: %d %d depth: %d\n",actionNames[s.first],s.pos.first,s.pos.second,s.depth);
+    TRACE("TRACE: Action: %d pos: %d %d depth: %d\n",static_cast<int>(s.first),s.pos.first,s.pos.second,s.depth);
     if(s.first!=NONE)
-        survivalScore[s.first]+=50;
+        survivalScore[s.first]+=20;
 
     vector<Action> bests;
     double maxScore = 0;
+#define SCORE_EPSILON 1
     for(int i=NONE;i<7;i++){
-        if(survivalScore[i]>maxScore){
+        if(survivalScore[i]>maxScore+SCORE_EPSILON){
             maxScore = survivalScore[i];
             bests.clear();
             bests.push_back(static_cast<Action>(i));
         }
-        else if(survivalScore[i]==maxScore){
+        else if(survivalScore[i]>=maxScore-SCORE_EPSILON){
             bests.push_back(static_cast<Action>(i));
         }
     }
@@ -422,6 +310,12 @@ static bool doTurn(){
         }
         TRACE("\n");
     }
+
+	if(shouldSuicide(game.currLoc))
+	{
+		TRACE("saurabh says dieeeeee\n");
+		a = getSuicidalMove(game.currLoc);
+	}
     ourLastMove = a;
     act(a);
     TRACE("TRACE: Turn #%d finished with action %s with a score of %f\n",game.currTurn,actionNames[a],maxScore);

@@ -129,7 +129,15 @@ struct EnemyInfo{
         SET_VAL(SPAWN_DELAY,val);
     }
     Player getMaster() const{
-        return static_cast<Player>(GET_VAL(MASTER));
+        int val = GET_VAL(MASTER);
+        switch(val){
+        case 0:
+            return RED;
+        case 1:
+            return BLUE;
+        default:
+            return NOONE;
+        }
     }
     void setMaster(Player p){
         SET_VAL(MASTER,p);

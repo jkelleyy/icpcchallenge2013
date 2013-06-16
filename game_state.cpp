@@ -46,7 +46,7 @@ bool canDoAction2(Action act,const loc_t& loc){
 	if(act != BOTTOM)
 		return game.canDoActionPlayer(act, loc);
 
-	return (!game.isSupported(loc))
+	return (game.canDoActionPlayer(act,loc))
 		|| (game.canDoActionPlayer(LEFT, loc) && game.canDoActionPlayer(DIG_RIGHT, simulateAction(LEFT, loc)))
 		|| (game.canDoActionPlayer(RIGHT, loc) && game.canDoActionPlayer(DIG_LEFT, simulateAction(RIGHT, loc)));
 

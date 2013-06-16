@@ -46,7 +46,6 @@ static inline bool isActionReversible(Action a, pair<int,int> loc){
 
 #define LEFT_SIDE 0
 #define RIGHT_SIDE 1
-
 static inline loc_t moveDir(const loc_t& curr,Action act){
     switch(act){
     case LEFT:
@@ -412,26 +411,20 @@ PredictionState stateTransition(PredictionState start,Action act){
 
 static int findSpace(World* w){
     bool seen[16][25];
-    for(int i=0;i<16;i++)
-        for(int j=0;j<25;j++)
-            seen[i][j] = false;
-    for(int i=0;i<fixedData.nenemies;i++){
-        if(w->enemies[i].isAlive())
-            seen[w->enemies[i].getLoc().first][w->enemies[i].getLoc().second]=true;
-    }
-    int counter = 1;
-    queue<loc_t> todo;
-    todo.push(w->currLoc);
+    int frontOffset = 0;
+    int backOffset = 0;
+    loc_t todo[20];
+    todo[backOffset++] = w->currLoc;
     seen[w->currLoc.first][w->currLoc.second] = true;
-    while(!todo.empty()){
+    int counter = 0;
+    while(frontOffset!=backOffset){
         if(counter>10)
             return 10;
-        loc_t curr = todo.front();
-        todo.pop();
+        loc_t curr = todo[frontOffset++];
         if(w->canDoActionPlayer(LEFT,curr)){
             loc_t next = simulateAction(*w,LEFT,curr);
             if(!seen[next.first][next.second]){
-                todo.push(next);
+                todo[backOffset++] = next;
                 seen[next.first][next.second] = true;
                 counter++;
             }
@@ -439,7 +432,7 @@ static int findSpace(World* w){
         if(w->canDoActionPlayer(RIGHT,curr)){
             loc_t next = simulateAction(*w,RIGHT,curr);
             if(!seen[next.first][next.second]){
-                todo.push(next);
+                todo[backOffset++] = next;
                 seen[next.first][next.second] = true;
                 counter++;
             }
@@ -447,7 +440,7 @@ static int findSpace(World* w){
         if(w->canDoActionPlayer(TOP,curr)){
             loc_t next = simulateAction(*w,TOP,curr);
             if(!seen[next.first][next.second]){
-                todo.push(next);
+                todo[backOffset++] = next;
                 seen[next.first][next.second] = true;
                 counter++;
             }
@@ -455,7 +448,7 @@ static int findSpace(World* w){
         if(w->canDoActionPlayer(BOTTOM,curr)){
             loc_t next = simulateAction(*w,BOTTOM,curr);
             if(!seen[next.first][next.second]){
-                todo.push(next);
+                todo[backOffset++] = next;
                 seen[next.first][next.second] = true;
                 counter++;
             }

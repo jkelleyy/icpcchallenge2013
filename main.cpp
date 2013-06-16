@@ -307,7 +307,7 @@ static bool doTurn(){
     for(int i =2; i <states.size();i++)
     {
     		TRACE("TRACE: CONSIDER Action: %s pos: %d %d depth: %d\n",actionNames[static_cast<int>(states[i].first)],states[i].pos.first,states[i].pos.second,states[i].depth);
-	    if(states[i].depth-s.depth<5){// && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
+	    if(states[i].depth-s.depth<10){// && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
 		    s = states[i];
 		    sd = i;
 	    }
@@ -318,7 +318,7 @@ static bool doTurn(){
     if(s.first==DIG_LEFT || s.first==DIG_RIGHT)
 	    TRACE("ORDERED TO DIG!\n");
     TRACE("TRACE: Action: %s pos: %d %d depth: %d\n",actionNames[static_cast<int>(s.first)],s.pos.first,s.pos.second,s.depth);
-    if(s.first!=NONE)
+    //if(s.first!=NONE)
         survivalScore[s.first]+=20;
 
     vector<Action> bests;

@@ -110,7 +110,6 @@ vector<state> pointsScore(int desiredGold){
 	//The best state to get X pieces of gold (X is index)
 	vector<state> best;
 	best.push_back(currState);
-	//best.push_back(tState);
 
 	if(!game.isAlive())
 		return best;
@@ -123,10 +122,12 @@ vector<state> pointsScore(int desiredGold){
 
 	updateMapCopy(w);
 	q.push(currState);
+	q.push(tState);
 
 	int lastDepthSeen = 0;
 	long long num =0;
 	long long maxNum = 16000;
+	int opTime = 10;
 	while(!q.empty() && num<maxNum){
 		num++;
 		state newState = q.front();q.pop();
@@ -141,6 +142,14 @@ vector<state> pointsScore(int desiredGold){
 
 		changeMap(w, newState.dugCells);
 
+		
+			if(checkBounds(cur)){
+		if(!newState.us && w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
+		{
+			w.map.lookup(cur.first,cur.second) = EMPTY;
+			w.timeout[cur.first][cur.second] = opTime;
+			
+		}
 		if(newState.us && w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
 		{
 			//TRACE("NUMGOLD %d\n",newState.numGold);
@@ -155,7 +164,7 @@ vector<state> pointsScore(int desiredGold){
 			else if (best.size()<=newState.numGold)
 				best.push_back(newState);
 		}
-
+			}
 
 		for(int i=NONE; i<7;i++){
 			Action a = static_cast<Action>(i);

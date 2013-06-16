@@ -298,11 +298,11 @@ static bool doTurn(){
     vector<state> states = pointsScore(3);
     //for(int i =1; i <states.size();i++)
 //	    survivalScore[states[i].first]+=100/states[i].depth*i;
-   
-   	//state s = states.size()-1; 
+
+   	//state s = states.size()-1;
     state s= states.size()>1?states[1]:states[0];
     TRACE("State 1 DIST: %d\n",s.depth);
-     int sd = 1;
+    int sd = 1;
     for(int i =2; i <states.size();i++)
     {
     		TRACE("TRACE: CONSIDER Action: %s pos: %d %d depth: %d\n",actionNames[static_cast<int>(states[i].first)],states[i].pos.first,states[i].pos.second,states[i].depth);

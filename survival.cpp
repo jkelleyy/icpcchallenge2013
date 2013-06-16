@@ -435,7 +435,7 @@ pair<int,ChaseInfo> computeChaseState(int enemyId){
 void scoreSurvival(int *score){
     for(int i=NONE;i<7;i++){
         if(canDoAction(static_cast<Action>(i)))
-            score[i]+=100;
+            score[i]=100;
         else
             score[i]=NEG_INF;
     }

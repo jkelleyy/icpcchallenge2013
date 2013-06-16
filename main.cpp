@@ -371,17 +371,22 @@ static bool doTurn(){
 
     //TODO add points score
 
-    vector<state> states = pointsScore(5);
+    vector<state> states = pointsScore(3);
     //for(int i =1; i <states.size();i++)
 //	    survivalScore[states[i].first]+=100/states[i].depth*i;
-    
+   
+   	//state s = states.size()-1; 
     state s= states.size()>1?states[1]:states[0];
     TRACE("State 1 DIST: %d\n",s.depth);
+   
+     int sd = 1;
     for(int i =2; i <states.size();i++)
     {
 	    TRACE("STATE: %d DIST %d COST %d\n",i,states[i].depth,states[i].cost);
-	    if(states[i].depth-s.depth<3 || states[i].cost<=s.cost)
+	    if(s.first==DIG_LEFT ||s.first==DIG_RIGHT){// || (states[i].depth-s.depth<10 && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
 		    s = states[i];
+		    sd = i;
+	    }
 	    else
 		    break;
 

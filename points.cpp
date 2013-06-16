@@ -112,7 +112,7 @@ vector<state> pointsScore(int desiredGold){
 	ll MAX_ITER = 6000;
 	while(!q.empty() && iter < MAX_ITER){
 		iter++;
-		TRACE("ITER: %ld\n",iter);
+		//TRACE("ITER: %ld\n",iter);
 		state newState = q.front();q.pop();
 		loc cur = newState.pos;
 		if(newState.depth > lastDepthSeen)
@@ -147,8 +147,8 @@ vector<state> pointsScore(int desiredGold){
 			Action a = static_cast<Action>(i);
 			if(w.canDoActionPlayer(a,cur,newState.digDelay)){
 				loc alteredLoc = simulateAction(a,cur);
-				//if(a==DIG_LEFT || a==DIG_RIGHT)
-				//	TRACE("Consid Might digg!\n");
+				if(a==DIG_LEFT || a==DIG_RIGHT)
+					TRACE("Consid Might digg!\n");
 				ll newGoldNum  = newState.goldNumber;
 				if(a==DIG_LEFT)
 					newGoldNum  |= digLeft;
@@ -169,23 +169,39 @@ vector<state> pointsScore(int desiredGold){
 					{
 						pair<int,int>  eloc = enemies[j].loc;
 						if(eloc.first==alteredState.pos.first && eloc.second==alteredState.pos.second)
-							alteredState.cost++;
+							alteredState.cost+=2;
 
 					}
-/*
-					int turnB = max(0,game.currTurn-5);
-					for(int j = turnB; j <game.currTurn;j++)
+
+					if(actions.size()>0 && alteredState.depth==1)
+					{
+						Action prev = actions[actions.size()-1];
+						if(prev==TOP && a==BOTTOM)
+							alteredState.cost++;
+						else if(prev==BOTTOM && a==TOP)
+							alteredState.cost++;
+						else if(prev==LEFT && a==RIGHT)
+							alteredState.cost++;
+						else if(prev==RIGHT && a==LEFT)
+							alteredState.cost++;
+						if(a==DIG_LEFT || a==DIG_RIGHT)
+							alteredState.cost=-40;
+					}
+					/*
+					int turnB = max(0,actions.size()-5);
+					for(int j = turnB; j <actions.size();j++)
 					{
 						int r = rlocs[j];
 						int c = clocs[j];
 						Action took = actions[j];
-						if(alteredLoc.first==r && alteredLoc.second==c && a==took)
+						if(alteredLoc.first==r && alteredLoc.second==c)
 						{
+							if(
 							//alteredState.cost++;
 							//TRACE("ADDING EXTRA COST\n");
 						}
-					}
-*/
+					}*/
+
 					visited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
 
 					if(a!=DIG_LEFT && a!=DIG_RIGHT){

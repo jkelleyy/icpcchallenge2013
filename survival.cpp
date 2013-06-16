@@ -513,33 +513,27 @@ void predict(double *scores){
     while(!todo.empty()){
         PredictionState curr = todo.front();
         todo.pop();
-        if(curr.depth>5){
-            delete curr.state;
-            while(!todo.empty()){
-                delete todo.front().state;
-                todo.pop();
-            }
-            break;
-        }
-        for(int i=NONE;i<7;i++){
-            //if(curr.state->isSupported() && i==NONE){
-            //    continue;//helps reduce branching
-            //}
-            if(curr.state->canDoActionPlayer(static_cast<Action>(i))){
-                PredictionState newState = stateTransition(curr,static_cast<Action>(i));
-                if(curr.depth==0){
-                    newState.startDir=static_cast<Action>(i);
-                }
-                if(newState.state->isAlive()){
-                    todo.push(newState);
-                }
-                else{
-                    delete newState.state;
+        if(curr.depth<5){
+            //only branch for states that have children we care about
+            for(int i=NONE;i<7;i++){
+                //if(curr.state->isSupported() && i==NONE){
+                //    continue;//helps reduce branching
+                //}
+                if(curr.state->canDoActionPlayer(static_cast<Action>(i))){
+                    PredictionState newState = stateTransition(curr,static_cast<Action>(i));
+                    if(curr.depth==0){
+                        newState.startDir=static_cast<Action>(i);
+                    }
+                    if(newState.state->isAlive()){
+                        todo.push(newState);
+                    }
+                    else{
+                        delete newState.state;
+                    }
                 }
             }
         }
         if(curr.startDir!=NONE){
-            //TODO prevent memleak
             if(scoreState(curr)>scoreState(best[curr.startDir])){
                 if(best[curr.startDir].state)
                     delete best[curr.startDir].state;

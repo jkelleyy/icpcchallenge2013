@@ -12,6 +12,7 @@ const int maxGold = 10;
 
 typedef long long ll;
 ll visited[16][26];
+ll tvisited[16][26];
 //InitialGoldNumbers
 ll goldNumber[16][26];
 COWMap<16,25> mapCopy;
@@ -54,7 +55,8 @@ void changeMap(PointsWorld& w, vector<dugCell> dugCells)
 		if(w.currTurn-dugCells[i].timeDug<=25)
 		{
 			//TRACE("DUG AT: %d %d %d\n",dugCells[i].loc.first,dugCells[i].loc.second,dugCells[i].timeDug);
-			w.map.lookup((dugCells[i]).loc.first,(dugCells[i]).loc.second) = REMOVED_BRICK;
+			if(checkBounds(dugCells[i].loc))
+				w.map.lookup((dugCells[i]).loc.first,(dugCells[i]).loc.second) = REMOVED_BRICK;
 		}
 	}
 }
@@ -88,6 +90,15 @@ vector<state> pointsScore(int desiredGold){
 	}
 
 	queue<state> q;
+	state tState;
+	tState.pos = game.enemyLoc;
+	tState.first = NONE;
+	tState.depth = 0;
+	tState.goldNumber = 1;
+	tState.numGold = 0;
+	tState.digDelay = game.brickDelay;
+	tState.us = false;
+
 	state currState;
 	currState.pos = game.currLoc;
 	currState.first = NONE;
@@ -95,22 +106,29 @@ vector<state> pointsScore(int desiredGold){
 	currState.goldNumber = 1;
 	currState.numGold = 0;
 	currState.digDelay = game.brickDelay;
+	currState.us = true;
 	//The best state to get X pieces of gold (X is index)
 	vector<state> best;
 	best.push_back(currState);
+	//best.push_back(tState);
 
 	if(!game.isAlive())
 		return best;
 	for(int i =0; i<16; i++)
 		for(int j = 0; j <25; j++)
+		{
 			visited[i][j] = 0;
+			tvisited[i][j] = 0;
+		}
 
 	updateMapCopy(w);
 	q.push(currState);
 
 	int lastDepthSeen = 0;
-
-	while(!q.empty()){
+	long long num =0;
+	long long maxNum = 16000;
+	while(!q.empty() && num<maxNum){
+		num++;
 		state newState = q.front();q.pop();
 		loc_t cur = newState.pos;
 		if(newState.depth > lastDepthSeen)
@@ -123,7 +141,7 @@ vector<state> pointsScore(int desiredGold){
 
 		changeMap(w, newState.dugCells);
 
-		if(w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
+		if(newState.us && w.checkMapRaw(cur)==GOLD && (!(newState.goldNumber&goldNumber[cur.first][cur.second])))
 		{
 			//TRACE("NUMGOLD %d\n",newState.numGold);
 			//TRACE("GOLDNUM %lld\n",newState.goldNumber);
@@ -143,14 +161,14 @@ vector<state> pointsScore(int desiredGold){
 			Action a = static_cast<Action>(i);
 			if(w.canDoActionPlayer(a,cur,newState.digDelay)){
 				loc_t alteredLoc = simulateAction(a,cur);
-				//if(a==DIG_LEFT || a==DIG_RIGHT)
-				//	TRACE("Consid Might digg!\n");
+				if((a==DIG_LEFT || a==DIG_RIGHT) && newState.depth==0)
+					TRACE("Consid Might digg!\n");
 				ll newGoldNum  = newState.goldNumber;
 				if(a==DIG_LEFT)
 					newGoldNum  |= digLeft;
 				if(a==DIG_RIGHT)
 					newGoldNum |=digRight;
-				if((visited[alteredLoc.first][alteredLoc.second] &  newGoldNum) != newGoldNum){
+				if( (!newState.us && ((tvisited[alteredLoc.first][alteredLoc.second] & newGoldNum)!=newGoldNum)) || (newState.us && ((visited[alteredLoc.first][alteredLoc.second] &  newGoldNum) != newGoldNum))){
 
 					state alteredState;
 					alteredState.pos = alteredLoc;
@@ -158,8 +176,12 @@ vector<state> pointsScore(int desiredGold){
 					alteredState.goldNumber = newGoldNum;
 					alteredState.numGold = newState.numGold;
 					alteredState.dugCells = newState.dugCells;
+					alteredState.us = newState.us;
 
-					visited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
+					if(newState.us)
+						visited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
+					else
+						tvisited[alteredLoc.first][alteredLoc.second] |= newGoldNum;
 
 					if(a!=DIG_LEFT && a!=DIG_RIGHT){
 						alteredState.digDelay = newState.digDelay==0?0:(newState.digDelay-1);

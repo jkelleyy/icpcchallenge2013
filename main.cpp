@@ -305,8 +305,8 @@ static bool doTurn(){
      int sd = 1;
     for(int i =2; i <states.size();i++)
     {
-	    TRACE("STATE: %d DIST %d COST %d\n",i,states[i].depth,0);//states[i].cost);
-	    if(states[i].depth-s.depth<10){// && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
+    		TRACE("TRACE: CONSIDER Action: %s pos: %d %d depth: %d\n",actionNames[static_cast<int>(states[i].first)],states[i].pos.first,states[i].pos.second,states[i].depth);
+	    if(states[i].depth-s.depth<5){// && states[i].cost<=s.cost)){// &&states[i].cost<=s.cost) || states[i].cost<s.cost)
 		    s = states[i];
 		    sd = i;
 	    }

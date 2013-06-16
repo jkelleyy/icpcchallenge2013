@@ -198,7 +198,7 @@ ChaseInfo computeChase(const World& world,int i){
         ret.startDir = computeChaseDir(world.enemies[i].getLoc(),world.enemyLoc,world.enemies[i].info->spawn.second<12 ? LEFT_SIDE : RIGHT_SIDE);
     }
     else if(oppDist<=oppRadius && ourDist<=ourRadius){
-        assert(ourDist==oppDist);
+        //assert(ourDist==oppDist);
         ret.pathLength = ourDist;
         if(world.enemies[i].info->spawn.second<12){
             Action a1 = computeChaseDir(world.enemies[i].getLoc(),world.currLoc,LEFT_SIDE);

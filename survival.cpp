@@ -404,13 +404,13 @@ PredictionState stateTransition(PredictionState start,Action act){
     return ret;
 }
 
-#define DEPTH_FUNC(val)
-#define KILL_FUNC(val)
-#define COIN_FUNC(val)
-#define ENEMY_DIST_FUNC(val)
-
 static int findSpace(World* w){
     bool seen[16][25];
+    memset(seen,0,sizeof(seen));
+    for(int i=0;i<fixedData.nenemies;i++){
+        if(w->enemies[i].isAlive())
+            seen[w->enemies[i].getLoc().first][w->enemies[i].getLoc().second] = true;
+    }
     int frontOffset = 0;
     int backOffset = 0;
     loc_t todo[20];

@@ -411,48 +411,57 @@ PredictionState stateTransition(PredictionState start,Action act){
 #define ENEMY_DIST_FUNC(val)
 
 static int findSpace(World* w){
-    set<loc_t> badSet;
-    for(int i=0;i<fixedData.nenemies;i++)
-        badSet.insert(w->enemies[i].getLoc());
-    set<loc_t> seen;
+    bool seen[16][25];
+    for(int i=0;i<16;i++)
+        for(int j=0;j<25;j++)
+            seen[i][j] = false;
+    for(int i=0;i<fixedData.nenemies;i++){
+        if(w->enemies[i].isAlive())
+            seen[w->enemies[i].getLoc().first][w->enemies[i].getLoc().second]=true;
+    }
+    int counter = 1;
     queue<loc_t> todo;
     todo.push(w->currLoc);
-    seen.insert(w->currLoc);
+    seen[w->currLoc.first][w->currLoc.second] = true;
     while(!todo.empty()){
-        if(seen.size()>10)
+        if(counter>10)
             return 10;
         loc_t curr = todo.front();
         todo.pop();
         if(w->canDoActionPlayer(LEFT,curr)){
             loc_t next = simulateAction(*w,LEFT,curr);
-            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+            if(!seen[next.first][next.second]){
                 todo.push(next);
-                seen.insert(next);
+                seen[next.first][next.second] = true;
+                counter++;
             }
         }
         if(w->canDoActionPlayer(RIGHT,curr)){
             loc_t next = simulateAction(*w,RIGHT,curr);
-            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+            if(!seen[next.first][next.second]){
                 todo.push(next);
-                seen.insert(next);
+                seen[next.first][next.second] = true;
+                counter++;
             }
         }
         if(w->canDoActionPlayer(TOP,curr)){
             loc_t next = simulateAction(*w,TOP,curr);
-            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+            if(!seen[next.first][next.second]){
                 todo.push(next);
-                seen.insert(next);
+                seen[next.first][next.second] = true;
+                counter++;
             }
         }
         if(w->canDoActionPlayer(BOTTOM,curr)){
             loc_t next = simulateAction(*w,BOTTOM,curr);
-            if(seen.find(next)==seen.end() && badSet.find(next)==badSet.end()){
+            if(!seen[next.first][next.second]){
                 todo.push(next);
-                seen.insert(next);
+                seen[next.first][next.second] = true;
+                counter++;
             }
         }
     }
-    return seen.size();
+    return counter;
 }
 
 double angleScore(Action a, Action b){

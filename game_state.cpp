@@ -17,29 +17,6 @@ int totalGoldOnMap;
 int max_gold_comp;
 int component[16][26];
 
-loc_t simulateAction(const World& world, Action act,const loc_t& loc){
-	if(loc.first==-1)
-		return make_pair(-1,-1);
-	//Falling
-	if(!world.isSupported(loc))
-		return make_pair(loc.first+1,loc.second);
-	switch(act){
-	case NONE:
-	case DIG_LEFT:
-	case DIG_RIGHT:
-		return loc;
-	case LEFT:
-		return make_pair(loc.first,loc.second-1);
-	case RIGHT:
-		return make_pair(loc.first,loc.second+1);
-	case TOP:
-		return make_pair(loc.first-1,loc.second);
-	case BOTTOM:
-		return make_pair(loc.first+1,loc.second);
-	}
-
-	return loc;
-}
 
 //this just has the change that if there is wall below, you can go down. used in finding traps, not in general.
 bool canDoAction2(Action act,const loc_t& loc){

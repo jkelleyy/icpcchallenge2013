@@ -66,7 +66,7 @@ int enemyDistCache[16][25][16][25];
 //return -1 for "infinite" distance
 int checkEnemyDist(loc_t enemyLoc, loc_t loc){
     if(!checkBounds(enemyLoc) || !checkBounds(loc)){
-        TRACE("BAD: %hhd %hhd %hhd %hhd\n",enemyLoc.first,enemyLoc.second,loc.first,loc.second);
+        //TRACE("BAD: %hhd %hhd %hhd %hhd\n",enemyLoc.first,enemyLoc.second,loc.first,loc.second);
         return -1;
     }
     int& val = enemyDistCache[enemyLoc.first][enemyLoc.second][loc.first][loc.second];
@@ -501,6 +501,9 @@ void predict(double *scores){
     //*start.state = game;
     start.state->enemyLoc = make_pair(-1,-1);
     todo.push(start);
+    TRACE("IN HERE\n");
+
+	fflush(stderr);
     while(!todo.empty()){
         PredictionState curr = todo.front();
         todo.pop();
@@ -540,8 +543,9 @@ void predict(double *scores){
     }
     for(int i=0;i<7;i++){
         TRACE("DEPTH: %d KILLS: %d GOLD %d\n",best[i].depth,best[i].kills,best[i].gold);
-        if(best[i].state!=NULL)
-            TRACE("LOC: %hhd %hhd\n",best[i].state->currLoc.first,best[i].state->currLoc.second);
+	fflush(stderr);
+        //if(best[i].state!=NULL)
+            //TRACE("LOC: %hhd %hhd\n",best[i].state->currLoc.first,best[i].state->currLoc.second);
         scores[i] = scoreState(best[i]);
         if(best[i].state!=NULL)
             delete best[i].state;
